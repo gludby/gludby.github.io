@@ -649,11 +649,7 @@ async function loadAll() {
       return obj;
     }).filter(m => m.id);
     
-    // Debug: log første medlem
-    if (allMembers.length > 0) {
-      console.log('Første medlem keys:', Object.keys(allMembers[0]));
-      console.log('Første betalingsønske:', allMembers[0].betalingsønske);
-    }
+
     
     renderOverblik();
     renderMembers();
@@ -686,7 +682,7 @@ function renderOverblik() {
     (m.betalingsønske === 'kontakt' || m['betalingsønske'] === 'kontakt') && 
     m.status === 'ny'
   );
-  console.log('Ventende på kontakt:', ventende.length, ventende.map(m => m.fornavn));
+
   const alertEl = document.getElementById('kontakt-alert');
   if (ventende.length > 0) {
     alertEl.style.display = 'block';
