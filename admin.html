@@ -629,8 +629,20 @@ async function loadAll() {
     allMembers = data.values.slice(1).map(row => {
       const obj = {};
       headers.forEach((h, i) => obj[h] = row[i] || '');
+      // Normalize betalingsønske - find kolonnen uanset encoding
+      if (!obj.betalingsønske) {
+        // Prøv at finde kolonnen med lignende navn
+        const bKey = Object.keys(obj).find(k => k.includes('betaling') || k.includes('nske'));
+        if (bKey && bKey !== 'betalingsønske') obj.betalingsønske = obj[bKey];
+      }
       return obj;
     }).filter(m => m.id);
+    
+    // Debug: log første medlem
+    if (allMembers.length > 0) {
+      console.log('Første medlem keys:', Object.keys(allMembers[0]));
+      console.log('Første betalingsønske:', allMembers[0].betalingsønske);
+    }
     
     renderOverblik();
     renderMembers();
