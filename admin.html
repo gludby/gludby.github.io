@@ -586,7 +586,11 @@ function doLogin() {
 function visAdmin() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  loadAll();
+  loadAll().then(() => {
+    // Gendan sidst besøgte side
+    const lastPage = sessionStorage.getItem('glud_admin_page') || 'overblik';
+    showPage(lastPage);
+  });
 }
 function logout() { 
   sessionStorage.removeItem('glud_admin_auth');
@@ -604,6 +608,7 @@ function showPage(id) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   document.getElementById('nav-' + id).classList.add('active');
+  sessionStorage.setItem('glud_admin_page', id);
 }
 
 // ── DATA FRA GOOGLE SHEETS ───────────────────────────────────────
@@ -626,6 +631,7 @@ async function api(action, data={}) {
 }
 
 async function loadAll() {
+  return new Promise(async (resolve) => {
   try {
     // Hent Medlemmer sheet via Google Sheets API
     const data = await sheetsGet('Medlemmer!A:R');
@@ -654,10 +660,13 @@ async function loadAll() {
     renderOverblik();
     renderMembers();
     updateUdsendelseCounts();
+    resolve();
   } catch(e) {
     console.error(e);
     toast('Kunne ikke hente data fra Google Sheets: ' + e.message, 'error');
+    resolve();
   }
+  }); // end Promise
 }
 
 // ── OVERBLIK ─────────────────────────────────────────────────────
@@ -836,7 +845,14 @@ async function skiftStatus(id, nyStatus, selectEl) {
     if (result.success) {
       const labels = { aktiv:'✅ Betalt', kontaktet:'📞 Kontaktet', inaktiv:'Inaktiv', frameldt:'Frameldt' };
       toast(`${navn} → ${labels[nyStatus] || nyStatus}`);
-      setTimeout(() => loadAll(), 1200);
+      // Opdater lokalt med det samme
+      const idx = allMembers.findIndex(x => x.id === id);
+      if (idx >= 0) {
+        allMembers[idx].status = nyStatus === 'aktiv' ? 'aktiv' : nyStatus;
+      }
+      renderMembers();
+      renderOverblik();
+      selectEl.value = '';
     }
   } catch(e) { 
     selectEl.value = '';
