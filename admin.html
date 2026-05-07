@@ -265,6 +265,17 @@ textarea:focus{outline:none;border-color:var(--green)}
         </div>
       </div>
 
+      <div id="kontakt-alert" style="display:none;background:#FFF3E0;border:2px solid #E65000;border-radius:12px;padding:1.25rem;margin-bottom:1.25rem;animation:pulse 2s infinite">
+        <div style="display:flex;align-items:center;gap:0.75rem">
+          <span style="font-size:1.8rem">📞</span>
+          <div>
+            <div style="font-weight:700;color:#E65000;font-size:1rem" id="kontakt-alert-titel">Afventer kontakt!</div>
+            <div style="font-size:0.85rem;color:#555;margin-top:0.2rem" id="kontakt-alert-tekst"></div>
+          </div>
+          <button class="btn btn-sm" style="margin-left:auto;background:#E65000;color:white" onclick="showPage('medlemmer')">Se medlemmer →</button>
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title">Hurtige handlinger</div>
         <div class="btn-group">
@@ -647,6 +658,19 @@ function renderOverblik() {
   document.getElementById('stat-kr').textContent      = kr.toLocaleString('da-DK');
   document.getElementById('overblik-year').textContent = `Kontingentår ${year}`;
 
+  // Vis alarm hvis nogen venter på kontakt
+  const ventende = allMembers.filter(m => m.betalingsønske === 'kontakt' && m.status === 'ny');
+  const alertEl = document.getElementById('kontakt-alert');
+  if (ventende.length > 0) {
+    alertEl.style.display = 'block';
+    document.getElementById('kontakt-alert-titel').textContent = 
+      `${ventende.length} ${ventende.length === 1 ? 'person venter' : 'personer venter'} på at blive kontaktet!`;
+    document.getElementById('kontakt-alert-tekst').textContent = 
+      ventende.map(m => m.fornavn + ' ' + m.efternavn).join(', ');
+  } else {
+    alertEl.style.display = 'none';
+  }
+
   // Seneste 8 tilmeldte
   const recent = [...allMembers].sort((a,b) => new Date(b.oprettet) - new Date(a.oprettet)).slice(0, 8);
   const tbody = document.getElementById('recent-tbody');
@@ -683,18 +707,16 @@ function renderMembers(filter=currentFilter) {
       <td>${m.type === 'erhverv' ? '<span class="badge badge-erhverv">Erhverv</span>' : 'Husstand'}</td>
       <td style="font-size:0.78rem">${m.betalingsønske || '–'}</td>
       <td>${badgeHTML(m.status)}</td>
-      <td style="display:flex;gap:0.35rem;flex-wrap:wrap">
-        ${m.betalingsønske === 'kontakt' && m.status === 'ny' ? `
-          <button class="btn btn-sm" style="background:#E65000;color:white" onclick="markerKontaktet('${m.id}','${m.fornavn}')">📞 Ring op</button>
-        ` : ''}
-        ${m.betalingsønske === 'kontakt' && m.status === 'kontaktet' ? `
-          <button class="btn btn-sm btn-primary" onclick="markerBetaltDirekte('${m.id}','${m.fornavn}')">✓ Betalt</button>
-        ` : ''}
-        ${m.status === 'ny' && m.betalingsønske !== 'kontakt' ? `
-          <button class="btn btn-sm btn-primary" onclick="markerBetaltDirekte('${m.id}','${m.fornavn}')">✓ Betalt</button>
-        ` : ''}
-        <button class="btn btn-sm btn-secondary" onclick='redigerMedlem(${JSON.stringify(m)})'>Rediger</button>
-        ${m.status !== 'frameldt' ? `<button class="btn btn-sm btn-danger" onclick="framedlMedlem('${m.id}','${m.fornavn}')">Afmeld</button>` : ''}
+      <td style="display:flex;gap:0.5rem;align-items:center">
+        <select onchange="skiftStatus('${m.id}', this.value, this)" 
+                style="padding:0.3rem 0.5rem;border:1.5px solid var(--cream-dark);border-radius:6px;font-size:0.8rem;background:var(--cream);cursor:pointer;max-width:130px">
+          <option value="" disabled selected>Skift status...</option>
+          <option value="aktiv">✅ Betalt/Aktiv</option>
+          <option value="kontaktet">📞 Kontaktet</option>
+          <option value="inaktiv">⏸ Inaktiv</option>
+          <option value="frameldt">🚫 Frameldt</option>
+        </select>
+        <button class="btn btn-sm btn-secondary" onclick='redigerMedlem(${JSON.stringify(m)})'>✏️</button>
       </td>
     </tr>`).join('');
 }
@@ -765,6 +787,38 @@ async function gemMedlem() {
       await loadAll();
     } else { toast('Fejl: ' + (result.message || 'Ukendt'), 'error'); }
   } catch(e) { toast('Netværksfejl', 'error'); }
+}
+
+async function skiftStatus(id, nyStatus, selectEl) {
+  if (!nyStatus) return;
+  const m = allMembers.find(x => x.id === id);
+  const navn = m ? m.fornavn + ' ' + m.efternavn : id;
+  
+  if (nyStatus === 'aktiv' && !confirm(`Marker ${navn} som betalt?`)) {
+    selectEl.value = '';
+    return;
+  }
+  if (nyStatus === 'frameldt' && !confirm(`Frameldt ${navn}? De modtager ikke flere opkrævninger.`)) {
+    selectEl.value = '';
+    return;
+  }
+
+  try {
+    let result;
+    if (nyStatus === 'aktiv') {
+      result = await api('markBetalt', { ids: [id], aar: CONFIG.AARSTAL });
+    } else {
+      result = await api('updateStatus', { id, status: nyStatus });
+    }
+    if (result.success) {
+      const labels = { aktiv:'✅ Betalt', kontaktet:'📞 Kontaktet', inaktiv:'Inaktiv', frameldt:'Frameldt' };
+      toast(`${navn} → ${labels[nyStatus] || nyStatus}`);
+      setTimeout(() => loadAll(), 1200);
+    }
+  } catch(e) { 
+    selectEl.value = '';
+    toast('Fejl', 'error'); 
+  }
 }
 
 async function markerKontaktet(id, navn) {
