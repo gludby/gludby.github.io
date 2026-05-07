@@ -575,17 +575,28 @@ let matchResults = { auto: [], usikker: [], ingen: [] };
 function doLogin() {
   const pw = document.getElementById('pw-input').value;
   if (pw === CONFIG.PASSWORD) {
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').style.display = 'block';
-    loadAll();
+    sessionStorage.setItem('glud_admin_auth', '1');
+    visAdmin();
   } else {
     document.getElementById('login-error').style.display = 'block';
     document.getElementById('pw-input').value = '';
     document.getElementById('pw-input').focus();
   }
 }
+function visAdmin() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  loadAll();
+}
+function logout() { 
+  sessionStorage.removeItem('glud_admin_auth');
+  location.reload(); 
+}
+// Tjek om allerede logget ind
+if (sessionStorage.getItem('glud_admin_auth') === '1') {
+  visAdmin();
+}
 document.getElementById('pw-input').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
-function logout() { location.reload(); }
 
 // ── NAVIGATION ───────────────────────────────────────────────────
 function showPage(id) {
@@ -671,7 +682,11 @@ function renderOverblik() {
   document.getElementById('overblik-year').textContent = `Kontingentår ${year}`;
 
   // Vis alarm hvis nogen venter på kontakt
-  const ventende = allMembers.filter(m => m.betalingsønske === 'kontakt' && m.status === 'ny');
+  const ventende = allMembers.filter(m => 
+    (m.betalingsønske === 'kontakt' || m['betalingsønske'] === 'kontakt') && 
+    m.status === 'ny'
+  );
+  console.log('Ventende på kontakt:', ventende.length, ventende.map(m => m.fornavn));
   const alertEl = document.getElementById('kontakt-alert');
   if (ventende.length > 0) {
     alertEl.style.display = 'block';
