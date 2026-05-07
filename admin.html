@@ -72,11 +72,11 @@ nav{padding:1rem 0}
 .stat-card.danger .stat-value{color:var(--danger)}
 
 /* CARDS */
-.card{background:var(--white);border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(28,61,42,0.06);margin-bottom:1.25rem}
+.card{background:var(--white);border-radius:12px;padding:1.5rem;box-shadow:0 2px 8px rgba(28,61,42,0.06);margin-bottom:1.25rem;overflow:visible}
 .card-title{font-weight:600;font-size:1rem;color:var(--green);margin-bottom:1rem;padding-bottom:0.6rem;border-bottom:1px solid var(--cream-dark)}
 
 /* TABEL */
-.table-wrap{overflow-x:auto}
+.table-wrap{overflow:visible}
 table{width:100%;border-collapse:collapse;font-size:0.88rem}
 th{text-align:left;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);font-weight:600;padding:0.6rem 0.75rem;border-bottom:2px solid var(--cream-dark);white-space:nowrap}
 td{padding:0.65rem 0.75rem;border-bottom:1px solid var(--cream-dark);vertical-align:middle}
@@ -181,7 +181,7 @@ textarea:focus{outline:none;border-color:var(--green)}
 .status-dropdown-btn:hover{border-color:var(--green);background:var(--cream)}
 .status-dropdown-btn svg{width:14px;height:14px;transition:transform 0.2s;flex-shrink:0}
 .status-dropdown-btn.open svg{transform:rotate(180deg)}
-.status-dropdown-menu{position:absolute;top:calc(100% + 4px);left:0;background:var(--white);border:1.5px solid var(--cream-dark);border-radius:10px;box-shadow:0 8px 24px rgba(28,61,42,0.12);min-width:200px;z-index:200;overflow:hidden;opacity:0;transform:translateY(-6px);pointer-events:none;transition:all 0.15s ease}
+.status-dropdown-menu{position:fixed;background:var(--white);border:1.5px solid var(--cream-dark);border-radius:10px;box-shadow:0 8px 24px rgba(28,61,42,0.12);min-width:220px;z-index:9999;overflow:hidden;opacity:0;transform:translateY(-6px);pointer-events:none;transition:all 0.15s ease}
 .status-dropdown-menu.open{opacity:1;transform:translateY(0);pointer-events:all}
 .status-dropdown-item{display:flex;align-items:center;gap:0.65rem;padding:0.65rem 1rem;cursor:pointer;font-size:0.85rem;transition:background 0.1s;border-bottom:1px solid var(--cream-dark)}
 .status-dropdown-item:last-child{border-bottom:none}
@@ -866,6 +866,23 @@ function toggleDropdown(id) {
   });
   const btn = document.querySelector(`#dd-${id} .status-dropdown-btn`);
   const menu = document.getElementById(`ddm-${id}`);
+  
+  if (!btn.classList.contains('open')) {
+    // Beregn position
+    const rect = btn.getBoundingClientRect();
+    const menuHeight = 250; // estimeret højde
+    const spaceBelow = window.innerHeight - rect.bottom;
+    
+    if (spaceBelow < menuHeight) {
+      // Åbn opad
+      menu.style.top = (rect.top - menuHeight + window.scrollY) + 'px';
+    } else {
+      // Åbn nedad
+      menu.style.top = (rect.bottom + 4 + window.scrollY) + 'px';
+    }
+    menu.style.left = rect.left + 'px';
+  }
+  
   btn.classList.toggle('open');
   menu.classList.toggle('open');
 }
