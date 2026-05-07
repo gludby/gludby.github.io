@@ -175,6 +175,21 @@ textarea:focus{outline:none;border-color:var(--green)}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.35);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 
+/* CUSTOM DROPDOWN */
+.status-dropdown{position:relative;display:inline-block}
+.status-dropdown-btn{display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0.75rem;background:var(--white);border:1.5px solid var(--cream-dark);border-radius:8px;font-size:0.82rem;cursor:pointer;transition:all 0.15s;white-space:nowrap;font-family:inherit;color:var(--text)}
+.status-dropdown-btn:hover{border-color:var(--green);background:var(--cream)}
+.status-dropdown-btn svg{width:14px;height:14px;transition:transform 0.2s;flex-shrink:0}
+.status-dropdown-btn.open svg{transform:rotate(180deg)}
+.status-dropdown-menu{position:absolute;top:calc(100% + 4px);left:0;background:var(--white);border:1.5px solid var(--cream-dark);border-radius:10px;box-shadow:0 8px 24px rgba(28,61,42,0.12);min-width:200px;z-index:200;overflow:hidden;opacity:0;transform:translateY(-6px);pointer-events:none;transition:all 0.15s ease}
+.status-dropdown-menu.open{opacity:1;transform:translateY(0);pointer-events:all}
+.status-dropdown-item{display:flex;align-items:center;gap:0.65rem;padding:0.65rem 1rem;cursor:pointer;font-size:0.85rem;transition:background 0.1s;border-bottom:1px solid var(--cream-dark)}
+.status-dropdown-item:last-child{border-bottom:none}
+.status-dropdown-item:hover{background:var(--cream)}
+.status-dropdown-item .item-icon{font-size:1rem;width:20px;text-align:center;flex-shrink:0}
+.status-dropdown-item .item-label{font-weight:600;font-size:0.83rem}
+.status-dropdown-item .item-desc{font-size:0.73rem;color:var(--muted);margin-top:0.1rem}
+
 /* EMPTY STATE */
 .empty{text-align:center;padding:3rem;color:var(--muted)}
 .empty-icon{font-size:3rem;margin-bottom:0.75rem}
@@ -740,14 +755,34 @@ function renderMembers(filter=currentFilter) {
       <td style="font-size:0.78rem">${m.betalingsønske || '–'}</td>
       <td>${badgeHTML(m.status, m.betalingsønske)}</td>
       <td style="display:flex;gap:0.5rem;align-items:center">
-        <select onchange="skiftStatus('${m.id}', this.value, this)" 
-                style="padding:0.3rem 0.5rem;border:1.5px solid var(--cream-dark);border-radius:6px;font-size:0.8rem;background:var(--cream);cursor:pointer;max-width:130px">
-          <option value="" disabled selected>Skift status...</option>
-          <option value="aktiv">✅ Betalt/Aktiv</option>
-          <option value="kontaktet">📞 Kontaktet</option>
-          <option value="inaktiv">⏸ Inaktiv</option>
-          <option value="frameldt">🚫 Frameldt</option>
-        </select>
+        <div class="status-dropdown" id="dd-${m.id}">
+          <button class="status-dropdown-btn" onclick="toggleDropdown('${m.id}')">
+            Skift status
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+          <div class="status-dropdown-menu" id="ddm-${m.id}">
+            <div class="status-dropdown-item" onclick="skiftStatusCustom('${m.id}', 'aktiv')">
+              <span class="item-icon">✅</span>
+              <div><div class="item-label">Betalt</div><div class="item-desc">Marker som betalt dette år</div></div>
+            </div>
+            <div class="status-dropdown-item" onclick="skiftStatusCustom('${m.id}', 'kontaktet')">
+              <span class="item-icon">📞</span>
+              <div><div class="item-label">Kontaktet</div><div class="item-desc">Vi har ringet/skrevet til dem</div></div>
+            </div>
+            <div class="status-dropdown-item" onclick="skiftStatusCustom('${m.id}', 'ny')">
+              <span class="item-icon">🔴</span>
+              <div><div class="item-label">Ring op</div><div class="item-desc">Afventer kontakt fra os</div></div>
+            </div>
+            <div class="status-dropdown-item" onclick="skiftStatusCustom('${m.id}', 'inaktiv')">
+              <span class="item-icon">⏸</span>
+              <div><div class="item-label">Inaktiv</div><div class="item-desc">Har ikke betalt dette år</div></div>
+            </div>
+            <div class="status-dropdown-item" onclick="skiftStatusCustom('${m.id}', 'frameldt')">
+              <span class="item-icon">🚫</span>
+              <div><div class="item-label">Frameldt</div><div class="item-desc">Fraflyttet, død eller ønsker ikke kontakt</div></div>
+            </div>
+          </div>
+        </div>
         <button class="btn btn-sm btn-secondary" onclick='redigerMedlem(${JSON.stringify(m)})'>✏️</button>
       </td>
     </tr>`).join('');
@@ -821,6 +856,37 @@ async function gemMedlem() {
   } catch(e) { toast('Netværksfejl', 'error'); }
 }
 
+function toggleDropdown(id) {
+  // Luk alle andre dropdowns
+  document.querySelectorAll('.status-dropdown-btn').forEach(b => {
+    if (!b.closest('.status-dropdown').id.endsWith(id)) {
+      b.classList.remove('open');
+      b.closest('.status-dropdown').querySelector('.status-dropdown-menu').classList.remove('open');
+    }
+  });
+  const btn = document.querySelector(`#dd-${id} .status-dropdown-btn`);
+  const menu = document.getElementById(`ddm-${id}`);
+  btn.classList.toggle('open');
+  menu.classList.toggle('open');
+}
+
+// Luk dropdown ved klik udenfor
+document.addEventListener('click', e => {
+  if (!e.target.closest('.status-dropdown')) {
+    document.querySelectorAll('.status-dropdown-btn').forEach(b => b.classList.remove('open'));
+    document.querySelectorAll('.status-dropdown-menu').forEach(m => m.classList.remove('open'));
+  }
+});
+
+async function skiftStatusCustom(id, nyStatus) {
+  // Luk dropdown
+  const btn = document.querySelector(`#dd-${id} .status-dropdown-btn`);
+  const menu = document.getElementById(`ddm-${id}`);
+  if (btn) btn.classList.remove('open');
+  if (menu) menu.classList.remove('open');
+  await skiftStatus(id, nyStatus, { value: '' });
+}
+
 async function skiftStatus(id, nyStatus, selectEl) {
   if (!nyStatus) return;
   const m = allMembers.find(x => x.id === id);
@@ -843,7 +909,7 @@ async function skiftStatus(id, nyStatus, selectEl) {
       result = await api('updateStatus', { id, status: nyStatus });
     }
     if (result.success) {
-      const labels = { aktiv:'✅ Betalt', kontaktet:'📞 Kontaktet', inaktiv:'Inaktiv', frameldt:'Frameldt' };
+      const labels = { aktiv:'✅ Betalt', kontaktet:'📞 Kontaktet', ny:'📞 Ring op', inaktiv:'Inaktiv', frameldt:'Frameldt' };
       toast(`${navn} → ${labels[nyStatus] || nyStatus}`);
       // Opdater lokalt med det samme
       const idx = allMembers.findIndex(x => x.id === id);
