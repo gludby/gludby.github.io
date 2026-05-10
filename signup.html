@@ -273,7 +273,7 @@
     display: block;
     width: 100%;
     padding: 0.85rem;
-    background: var(--green);
+    background: #27AE60;
     border: none;
     border-radius: 8px;
     font-family: 'Barlow', sans-serif;
@@ -286,9 +286,9 @@
     letter-spacing: 0.02em;
   }
   .betalt-btn:hover {
-    background: var(--green-mid);
+    background: #1E8449;
     transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(28,61,42,0.2);
+    box-shadow: 0 4px 12px rgba(39,174,96,0.3);
   }
   .mobilepay-btn {
     display: block;
@@ -656,7 +656,8 @@ function showConfirmation(data, duplikat) {
         </div>
         <p style="font-size:0.82rem;color:var(--text-muted);text-align:center">
           Eller åbn MobilePay og send <strong>${beloeb} kr.</strong> til nr. <strong>${CONFIG.MOBILEPAY_NR}</strong>
-        </p>`}`;
+        </p>
+        <button onclick="markerSelvBetalt()" class="betalt-btn">✓ Klik her, når du har betalt</button>`}`;
       break;
 
     case 'bankoverforsel':
