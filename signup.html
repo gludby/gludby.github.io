@@ -269,6 +269,24 @@
     margin-bottom: 0.5rem;
   }
 
+  .betalt-btn {
+    display: block;
+    width: 100%;
+    padding: 0.65rem;
+    background: transparent;
+    border: 1.5px solid var(--cream-dark);
+    border-radius: 8px;
+    font-family: 'Barlow', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 0.75rem;
+  }
+  .betalt-btn:hover {
+    border-color: var(--green);
+    color: var(--green);
+  }
   .mobilepay-btn {
     display: block;
     width: 100%;
@@ -605,7 +623,7 @@ function showConfirmation(data, duplikat) {
   const confirmEl = document.getElementById('confirm-text');
   confirmEl.innerHTML = duplikat
     ? `Dine oplysninger er opdateret.<br><br>Tusind tak fordi du vil støtte arbejdet i din lokale borgerforening — det sætter vi meget pris på! ❤️`
-    : `Hej <strong>${data.fornavn}</strong>!<br><br>Så snart din indbetaling er på plads, er du officielt medlem.<br><br>Tusind tak fordi du vil støtte arbejdet i din lokale borgerforening — det sætter vi meget pris på! ❤️`;
+    : `Hej <strong>${data.fornavn}!</strong><br><br>Så snart din indbetaling er på plads, er du officielt medlem.<br><br>Tusind tak fordi du vil støtte arbejdet i din lokale borgerforening — det sætter vi meget pris på! ❤️`;
 
   const mpUrl = `https://mobilepay.dk/erhverv/betalingslink/betalingslink-svar?phone=29101&amount=${beloeb}&comment=Kontingent+Glud+Borgerforening&lock=1`;
 
@@ -645,9 +663,7 @@ function showConfirmation(data, duplikat) {
         <p style="font-size:0.88rem;color:var(--text-muted);margin-top:0.4rem">
           Overfør venligst <strong>${beloeb} kr.</strong> og husk at skrive dit fulde navn i overførslen.
         </p>
-        <button onclick="markerSelvBetalt()" style="width:100%;margin-top:0.85rem;padding:0.65rem;background:transparent;border:1.5px solid var(--cream-dark);border-radius:8px;font-family:inherit;font-size:0.85rem;color:var(--text-muted);cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--text-muted)'">
-          ✓ Jeg har betalt
-        </button>`;
+        <button onclick="markerSelvBetalt()" class="betalt-btn">✓ Klik her, når du har betalt</button>`;
       break;
     case 'kontakt':
       html = `
