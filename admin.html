@@ -572,7 +572,7 @@ const CONFIG = {
   PASSWORD:        'glud2026',
   MOBILEPAY_NR:    '29101',
   KONTO_NR:        '4727 - 4185293',
-  GATEWAYAPI_KEY:  'c8OFyCNRQmGIXyAyzaFBI57CX5AdM-cNrukHmbAjv-JvxeDq35hGDJ0zFtG-CZxW',
+  GATEWAYAPI_KEY:  'DIN_GATEWAYAPI_NOEGLE',
   TEST_TLF:        '4530208899',
   AFSENDER:        'Gludby.dk',
   KONTINGENT_PRIVAT:  100,
@@ -1261,21 +1261,15 @@ function buildSMSText(fornavn, mpLink, afmeldLink) {
 }
 
 async function sendSMSViaGateway(numbers, message) {
-  const recipients = numbers.map(n => ({ msisdn: parseInt('45' + n.replace(/\D/g,'').slice(-8)) }));
-  const resp = await fetch('https://gatewayapi.com/rest/mtsms', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': 'Token ' + CONFIG.GATEWAYAPI_KEY,
-    },
-    body: JSON.stringify({
-      sender: CONFIG.AFSENDER,
-      message,
-      recipients,
-    }),
-  });
-  if (!resp.ok) throw new Error('GatewayAPI fejl: ' + resp.status);
-  return resp.json();
+  // Sender via Apps Script som mellemled (undgår CORS-blokering fra browser)
+  const results = [];
+  for (const tlf of numbers) {
+    const payload = JSON.stringify({ action: 'sendSms', tlf, besked: message });
+    const url = CONFIG.APPS_SCRIPT_URL + '?data=' + encodeURIComponent(payload);
+    const resp = await fetch(url, { method: 'GET', mode: 'no-cors' });
+    results.push({ tlf });
+  }
+  return results;
 }
 
 // ── HJÆLPEFUNKTIONER ─────────────────────────────────────────────
