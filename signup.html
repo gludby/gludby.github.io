@@ -602,9 +602,10 @@ function showConfirmation(data, duplikat) {
   const navn = `${data.fornavn} ${data.efternavn}`;
   const beloeb = data.beloeb;
 
-  document.getElementById('confirm-text').textContent = duplikat
-    ? `Dine oplysninger er opdateret, ${data.fornavn}. Vi har din tilmelding.`
-    : `Hej ${data.fornavn}! Vi mangler kun din betaling på ${beloeb} kr., så er du officielt medlem.`;
+  const confirmEl = document.getElementById('confirm-text');
+  confirmEl.innerHTML = duplikat
+    ? `Dine oplysninger er opdateret.<br><br>Tusind tak fordi du vil støtte arbejdet i din lokale borgerforening — det sætter vi meget pris på! ❤️`
+    : `Hej <strong>${data.fornavn}</strong>!<br><br>Så snart din indbetaling er på plads, er du officielt medlem.<br><br>Tusind tak fordi du vil støtte arbejdet i din lokale borgerforening — det sætter vi meget pris på! ❤️`;
 
   const mpUrl = `https://mobilepay.dk/erhverv/betalingslink/betalingslink-svar?phone=29101&amount=${beloeb}&comment=Kontingent+Glud+Borgerforening&lock=1`;
 
@@ -642,14 +643,17 @@ function showConfirmation(data, duplikat) {
         <div class="pi-label">Bankoverførsel</div>
         <span class="konto-nr">${CONFIG.KONTO_BANK}</span>
         <p style="font-size:0.88rem;color:var(--text-muted);margin-top:0.4rem">
-          Overfør <strong>${beloeb} kr.</strong> og skriv venligst <strong>${data.fornavn} ${data.efternavn}</strong> i beskedfeltet.
-        </p>`;
+          Overfør venligst <strong>${beloeb} kr.</strong> og husk at skrive dit fulde navn i overførslen.
+        </p>
+        <button onclick="markerSelvBetalt()" style="width:100%;margin-top:0.85rem;padding:0.65rem;background:transparent;border:1.5px solid var(--cream-dark);border-radius:8px;font-family:inherit;font-size:0.85rem;color:var(--text-muted);cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='var(--green)';this.style.color='var(--green)'" onmouseout="this.style.borderColor='var(--cream-dark)';this.style.color='var(--text-muted)'">
+          ✓ Jeg har betalt
+        </button>`;
       break;
     case 'kontakt':
       html = `
         <div class="pi-label">Vi kontakter dig</div>
         <p style="font-size:0.88rem;color:var(--text-muted)">
-          Vi ringer til dig på <strong>${data.tlf.replace(/(\d{2})(?=\d)/g, '$1 ').trim()}</strong> for at aftale betaling. Tak for tålmodigheden!
+          Vi ringer til dig på <strong>${data.tlf.replace(/(\d{2})(?=\d)/g, '$1 ').trim()}</strong> for at aftale betaling — tak for tålmodigheden!
         </p>`;
       break;
   }
