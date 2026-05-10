@@ -272,20 +272,23 @@
   .betalt-btn {
     display: block;
     width: 100%;
-    padding: 0.65rem;
-    background: transparent;
-    border: 1.5px solid var(--cream-dark);
+    padding: 0.85rem;
+    background: var(--green);
+    border: none;
     border-radius: 8px;
     font-family: 'Barlow', sans-serif;
-    font-size: 0.88rem;
-    color: var(--text-muted);
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: white;
     cursor: pointer;
     transition: all 0.2s;
     margin-top: 0.75rem;
+    letter-spacing: 0.02em;
   }
   .betalt-btn:hover {
-    border-color: var(--green);
-    color: var(--green);
+    background: var(--green-mid);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(28,61,42,0.2);
   }
   .mobilepay-btn {
     display: block;
@@ -676,6 +679,16 @@ function showConfirmation(data, duplikat) {
 
   document.getElementById('payment-instruction').innerHTML = html;
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function markerSelvBetalt() {
+  document.getElementById('payment-instruction').style.display = 'none';
+  document.getElementById('confirm-text').innerHTML = 
+    'Du er nu registreret som betalt.<br><br>Tusind tak for din støtte til Glud og Omegns Borgerforening! ❤️<br><br>Vi glæder os til at se dig til vores næste arrangement.';
+  const h2 = document.querySelector('.confirm-box h2');
+  if (h2) h2.textContent = 'Velkommen som medlem!';
+  const icon = document.querySelector('.confirm-icon');
+  if (icon) icon.textContent = '🎉';
 }
 </script>
 
