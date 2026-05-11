@@ -1222,7 +1222,7 @@ function confirmSend() {
 }
 
 async function sendTestSMS() {
-  const mpLink = `https://mobilepay.dk/erhverv/betalingslink/betalingslink-svar?phone=${CONFIG.MOBILEPAY_NR}&amount=${CONFIG.KONTINGENT_PRIVAT}&comment=Kontingent${CONFIG.AARSTAL}&lock=1`;
+  const mpLink = 'https://gludby.dk/betal';
   const afmeldLink = `https://gludby.dk/afmeld?id=TESTTOKEN`;
   const tekst = buildSMSText('Testperson', mpLink, afmeldLink);
   const btn = document.querySelector('[onclick="sendTestSMS()"]');
@@ -1246,7 +1246,7 @@ async function doSend() {
   let sendt = 0, fejl = 0;
 
   for (const m of modtagere) {
-    const mpLink = `https://mobilepay.dk/erhverv/betalingslink/betalingslink-svar?phone=${CONFIG.MOBILEPAY_NR}&amount=${m.type==='erhverv'?CONFIG.KONTINGENT_ERHVERV:CONFIG.KONTINGENT_PRIVAT}&comment=Kontingent${CONFIG.AARSTAL}&lock=1`;
+    const mpLink = m.type === 'erhverv' ? 'https://gludby.dk/betal-erhverv' : 'https://gludby.dk/betal';
     const afmeldLink = `https://gludby.dk/afmeld?id=${m.afmeldToken || m.id}`;
     const tekst = buildSMSText(m.fornavn, mpLink, afmeldLink);
     try {
