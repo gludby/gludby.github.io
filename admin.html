@@ -1221,11 +1221,19 @@ function confirmSend() {
 }
 
 async function sendTestSMS() {
-  const tekst = buildSMSText('Test', 'TestLink', 'AfmeldLink');
+  const mpLink = `https://mobilepay.dk/erhverv/betalingslink/betalingslink-svar?phone=${CONFIG.MOBILEPAY_NR}&amount=${CONFIG.KONTINGENT_PRIVAT}&comment=Kontingent${CONFIG.AARSTAL}&lock=1`;
+  const afmeldLink = `https://gludby.dk/afmeld?id=TESTTOKEN`;
+  const tekst = buildSMSText('Testperson', mpLink, afmeldLink);
+  const btn = document.querySelector('[onclick="sendTestSMS()"]');
+  if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Sender...'; }
   try {
     await sendSMSViaGateway([CONFIG.TEST_TLF], tekst);
     toast(`Test-SMS sendt til ${CONFIG.TEST_TLF}`);
-  } catch(e) { toast('Fejl ved afsendelse: ' + e.message, 'error'); }
+  } catch(e) {
+    toast('Fejl ved afsendelse: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = '🧪 Send test til mig selv'; }
+  }
 }
 
 async function doSend() {
@@ -1261,12 +1269,23 @@ function buildSMSText(fornavn, mpLink, afmeldLink) {
 }
 
 async function sendSMSViaGateway(numbers, message) {
-  // Sender via Apps Script som mellemled (undgår CORS-blokering fra browser)
   const results = [];
   for (const tlf of numbers) {
     const payload = JSON.stringify({ action: 'sendSms', tlf, besked: message });
-    const url = CONFIG.APPS_SCRIPT_URL + '?data=' + encodeURIComponent(payload);
-    const resp = await fetch(url, { method: 'GET', mode: 'no-cors' });
+    await new Promise((resolve, reject) => {
+      const cbName = 'cb_' + Date.now();
+      window[cbName] = function(data) {
+        delete window[cbName];
+        document.getElementById(cbName)?.remove();
+        if (data.success) resolve(data);
+        else reject(new Error(data.message || 'Ukendt fejl'));
+      };
+      const script = document.createElement('script');
+      script.id = cbName;
+      script.src = CONFIG.APPS_SCRIPT_URL + '?data=' + encodeURIComponent(payload) + '&callback=' + cbName;
+      script.onerror = () => reject(new Error('Script fejl'));
+      document.head.appendChild(script);
+    });
     results.push({ tlf });
   }
   return results;
