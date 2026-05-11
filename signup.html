@@ -150,6 +150,7 @@
     background: var(--white);
   }
   .field input.error { border-color: var(--error); }
+  .field input[type="checkbox"] { width:1.2rem; height:1.2rem; padding:0; border:none; border-radius:3px; background:none; box-shadow:none; appearance:auto; -webkit-appearance:auto; accent-color:var(--green); }
   .field-row { display: grid; grid-template-columns: 100px 1fr; gap: 0.75rem; }
   .field-hint {
     font-size: 0.78rem;
@@ -412,25 +413,25 @@
         </div>
       </div>
 
-      <div class="field">
-        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer">
-          <input type="checkbox" id="vis-navn2" onchange="toggleNavn2()" style="width:1.1rem;height:1.1rem;cursor:pointer">
-          Notér ægtefælle/samlever (valgfrit)
-        </label>
-      </div>
-
-      <div id="navn2-sektion" style="display:none;margin-top:0.75rem">
-        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem">Ægtefælle/samlevers navn</div>
+      <div id="navn2-sektion" style="margin-bottom:0.75rem">
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-bottom:0.4rem"><input type="checkbox" id="vis-navn2" onchange="toggleNavn2()" style="width:1.1rem;height:1.1rem;cursor:pointer;accent-color:var(--green);appearance:auto;-webkit-appearance:auto;flex-shrink:0"> Ægtefælle / samlever <span style="font-weight:300;text-transform:none;letter-spacing:0">(valgfrit)</span></label>
         <div class="field-row">
           <div class="field">
-            <label>Fornavn</label>
-            <input type="text" id="navn2-fornavn" placeholder="••••••" autocomplete="off">
+            <label id="navn2-fornavn-label" style="opacity:0.4">Fornavn</label>
+            <input type="text" id="navn2-fornavn" placeholder="••••••" autocomplete="off" disabled style="opacity:0.4;cursor:not-allowed">
           </div>
           <div class="field">
-            <label>Efternavn</label>
-            <input type="text" id="navn2-efternavn" placeholder="••••••" autocomplete="off">
+            <label id="navn2-efternavn-label" style="opacity:0.4">Efternavn</label>
+            <input type="text" id="navn2-efternavn" placeholder="••••••" autocomplete="off" disabled style="opacity:0.4;cursor:not-allowed">
           </div>
         </div>
+      </div>
+
+      <div class="field" style="margin-bottom:0.5rem">
+        <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;text-transform:none;font-size:0.9rem;font-weight:400;letter-spacing:0">
+          <input type="checkbox" id="vis-navn2" onchange="toggleNavn2()" style="width:1.2rem;height:1.2rem;cursor:pointer;accent-color:var(--green);flex-shrink:0">
+          Aktivér felterne ovenfor
+        </label>
       </div>
 
       <div class="field">
@@ -577,8 +578,17 @@ function normalizePhone(tlf) {
 
 async 
 function toggleNavn2() {
-  const vis = document.getElementById('vis-navn2').checked;
-  document.getElementById('navn2-sektion').style.display = vis ? 'block' : 'none';
+  const aktiv = document.getElementById('vis-navn2').checked;
+  const opacity = aktiv ? '1' : '0.4';
+  const cursor = aktiv ? '' : 'not-allowed';
+  document.getElementById('navn2-fornavn').disabled = !aktiv;
+  document.getElementById('navn2-fornavn').style.opacity = opacity;
+  document.getElementById('navn2-fornavn').style.cursor = cursor;
+  document.getElementById('navn2-efternavn').disabled = !aktiv;
+  document.getElementById('navn2-efternavn').style.opacity = opacity;
+  document.getElementById('navn2-efternavn').style.cursor = cursor;
+  document.getElementById('navn2-fornavn-label').style.opacity = opacity;
+  document.getElementById('navn2-efternavn-label').style.opacity = opacity;
 }
 
 function submitForm() {
