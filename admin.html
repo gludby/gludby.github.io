@@ -95,6 +95,7 @@ tr:hover td{background:rgba(28,61,42,0.02)}
 .badge-erhverv{background:rgba(28,61,42,0.12);color:var(--green)}
 .badge-kontakt{background:rgba(230,80,0,0.12);color:#E65000;animation:pulse 2s infinite}
 .badge-kontaktet{background:rgba(230,126,34,0.12);color:var(--warn)}
+.mangler{display:inline-block;font-size:0.7rem;padding:1px 5px;border-radius:3px;background:rgba(192,57,43,0.1);color:var(--danger);margin-left:3px}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.6}}
 
 /* KNAPPER */
@@ -495,19 +496,6 @@ Afmeld: {AFMELDLINK}</textarea>
         <input type="text" id="m-efternavn">
       </div>
     </div>
-    <div style="border-top:1px solid var(--border);padding-top:0.75rem;margin-top:0.25rem">
-      <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-bottom:0.5rem">Ægtefælle / samlever</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
-        <div class="field-small">
-          <label>Fornavn</label>
-          <input type="text" id="m-navn2Fornavn" placeholder="Valgfrit">
-        </div>
-        <div class="field-small">
-          <label>Efternavn</label>
-          <input type="text" id="m-navn2Efternavn" placeholder="Valgfrit">
-        </div>
-      </div>
-    </div>
     <div class="field-small">
       <label>Adresse *</label>
       <input type="text" id="m-adresse">
@@ -755,7 +743,7 @@ function renderMembers(filter=currentFilter) {
   const search = document.getElementById('search-input')?.value.toLowerCase() || '';
   if (search) {
     data = data.filter(m =>
-      `${m.fornavn} ${m.efternavn} ${m.navn2Fornavn||''} ${m.navn2Efternavn||''} ${m.adresse} ${m.tlf}`.toLowerCase().includes(search));
+      `${m.fornavn} ${m.efternavn} ${m.adresse} ${m.tlf}`.toLowerCase().includes(search));
   }
   if (filter !== 'alle') data = data.filter(m => m.status === filter);
 
@@ -766,9 +754,9 @@ function renderMembers(filter=currentFilter) {
   }
   tbody.innerHTML = data.map(m => `
     <tr>
-      <td><strong>${m.fornavn} ${m.efternavn}</strong>${m.navn2Fornavn ? `<br><span style="font-size:0.78rem;color:var(--muted)">&#128101; ${m.navn2Fornavn} ${m.navn2Efternavn||''}</span>` : ''}${m.virksomhed ? `<br><span style="font-size:0.78rem;color:var(--muted)">${m.virksomhed}</span>` : ''}</td>
+      <td><strong>${m.fornavn} ${m.efternavn}</strong>${!m.mail ? '<span class="mangler">mangler mail</span>' : ''}${m.virksomhed ? `<br><span style="font-size:0.78rem;color:var(--muted)">${m.virksomhed}</span>` : ''}</td>
       <td style="font-size:0.83rem">${m.adresse}, ${m.postnr} ${m.by}</td>
-      <td style="font-size:0.83rem">${formatTlf(m.tlf)}</td>
+      <td style="font-size:0.83rem">${m.tlf ? formatTlf(m.tlf) : '<span class="mangler">mangler tlf</span>'}</td>
       <td>${m.type === 'erhverv' ? '<span class="badge badge-erhverv">Erhverv</span>' : 'Husstand'}</td>
       <td style="font-size:0.78rem">${m.betalingsønske || '–'}</td>
       <td>${badgeHTML(m.status, m.betalingsønske)}${m.moSvar ? '<br><span class="badge badge-mosvar" title="' + m.moSvar + '">📩 Har svaret</span>' : ''}</td>
@@ -819,7 +807,7 @@ function openModal(id) {
   if (id === 'ny-medlem') {
     document.getElementById('modal-titel').textContent = 'Tilføj nyt medlem';
     document.getElementById('edit-id').value = '';
-    ['fornavn','efternavn','adresse','tlf','mail','noter','navn2Fornavn','navn2Efternavn'].forEach(f => document.getElementById('m-'+f).value = '');
+    ['fornavn','efternavn','adresse','tlf','mail','noter'].forEach(f => document.getElementById('m-'+f).value = '');
     document.getElementById('m-postnr').value = '7130';
     document.getElementById('m-by').value = 'Juelsminde';
     document.getElementById('m-type').value = 'privat';
@@ -834,8 +822,6 @@ function redigerMedlem(m) {
   document.getElementById('edit-id').value = m.id;
   document.getElementById('m-fornavn').value   = m.fornavn;
   document.getElementById('m-efternavn').value = m.efternavn;
-  document.getElementById('m-navn2Fornavn').value  = m.navn2Fornavn || '';
-  document.getElementById('m-navn2Efternavn').value = m.navn2Efternavn || '';
   document.getElementById('m-adresse').value   = m.adresse;
   document.getElementById('m-postnr').value    = m.postnr;
   document.getElementById('m-by').value        = m.by;
@@ -854,8 +840,6 @@ async function gemMedlem() {
     id,
     fornavn:   document.getElementById('m-fornavn').value.trim(),
     efternavn: document.getElementById('m-efternavn').value.trim(),
-    navn2Fornavn:  document.getElementById('m-navn2Fornavn').value.trim(),
-    navn2Efternavn: document.getElementById('m-navn2Efternavn').value.trim(),
     adresse:   document.getElementById('m-adresse').value.trim(),
     postnr:    document.getElementById('m-postnr').value.trim(),
     by:        document.getElementById('m-by').value.trim(),
@@ -1069,13 +1053,6 @@ function runMatching(betalinger) {
         const fs = nameSimilarity(fornavn, m.fornavn);
         const es = efternavn ? nameSimilarity(efternavn, m.efternavn) : 0.5;
         score += fs * 30 + es * 15;
-        // Match også på samlever
-        if (m.navn2Fornavn) {
-          const fs2 = nameSimilarity(fornavn, m.navn2Fornavn);
-          const es2 = efternavn ? nameSimilarity(efternavn, m.navn2Efternavn || '') : 0.5;
-          const score2 = fs2 * 30 + es2 * 15;
-          if (score2 > fs * 30 + es * 15) score = (score - (fs * 30 + es * 15)) + score2;
-        }
       }
       if (score > bedsteScore) { bedsteScore = score; bedsteMatch = m; }
     });
