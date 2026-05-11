@@ -398,45 +398,66 @@
 
       <div id="virksomheds-felt" class="field">
         <label>Virksomhedsnavn <span class="req">*</span></label>
-        <input type="text" id="virksomhed" placeholder="Firma A/S">
+        <input type="text" id="virksomhed" placeholder="••••••">
       </div>
 
       <div class="field-row">
         <div class="field">
           <label>Fornavn <span class="req">*</span></label>
-          <input type="text" id="fornavn" placeholder="Anders" autocomplete="given-name">
+          <input type="text" id="fornavn" placeholder="••••••" autocomplete="given-name">
         </div>
         <div class="field">
           <label>Efternavn <span class="req">*</span></label>
-          <input type="text" id="efternavn" placeholder="Jensen" autocomplete="family-name">
+          <input type="text" id="efternavn" placeholder="••••••" autocomplete="family-name">
+        </div>
+      </div>
+
+      <div class="field">
+        <label style="display:flex;align-items:center;gap:0.5rem;cursor:pointer">
+          <input type="checkbox" id="vis-navn2" onchange="toggleNavn2()" style="width:1.1rem;height:1.1rem;cursor:pointer">
+          Notér ægtefælle/samlever (valgfrit)
+        </label>
+      </div>
+
+      <div id="navn2-sektion" style="display:none;margin-top:0.75rem">
+        <div style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem">Ægtefælle/samlevers navn</div>
+        <div class="field-row">
+          <div class="field">
+            <label>Fornavn</label>
+            <input type="text" id="navn2-fornavn" placeholder="••••••" autocomplete="off">
+          </div>
+          <div class="field">
+            <label>Efternavn</label>
+            <input type="text" id="navn2-efternavn" placeholder="••••••" autocomplete="off">
+          </div>
         </div>
       </div>
 
       <div class="field">
         <label>Adresse <span class="req">*</span></label>
-        <input type="text" id="adresse" placeholder="Gludvej 12, Glud" autocomplete="street-address">
+        <input type="text" id="adresse" placeholder="••••••" autocomplete="street-address">
       </div>
 
       <div class="field-row">
         <div class="field">
           <label>Postnr. <span class="req">*</span></label>
-          <input type="text" id="postnr" placeholder="7130" maxlength="4" inputmode="numeric" autocomplete="postal-code">
+          <input type="text" id="postnr" placeholder="••••" maxlength="4" inputmode="numeric" autocomplete="postal-code">
         </div>
         <div class="field">
           <label>By <span class="req">*</span></label>
-          <input type="text" id="by" placeholder="Juelsminde" autocomplete="address-level2">
+          <input type="text" id="by" placeholder="••••••" autocomplete="address-level2">
         </div>
       </div>
 
       <div class="field">
         <label>Telefonnr. <span class="req">*</span></label>
-        <input type="tel" id="tlf" placeholder="12 34 56 78" inputmode="tel" autocomplete="tel">
+        <input type="tel" id="tlf" placeholder="•• •• •• ••" inputmode="tel" autocomplete="tel">
         <div class="field-hint">Bruges til MobilePay-afstemning og eventuelle påmindelser via SMS</div>
       </div>
 
       <div class="field">
         <label>E-mail <span style="font-weight:300;text-transform:none;font-size:0.78rem">(valgfri)</span></label>
-        <input type="email" id="mail" placeholder="din@email.dk" autocomplete="email">
+        <input type="email" id="mail" placeholder="••••••••" autocomplete="email">
       </div>
     </div>
 
@@ -472,8 +493,8 @@
           <div class="radio-dot"></div>
           <div class="payment-icon">🤝</div>
           <div class="payment-text">
-            <div class="payment-name">Kontakt mig</div>
-            <div class="payment-desc">Vi ringer eller mødes – f.eks. kontant betaling</div>
+            <div class="payment-name">Kontant betaling</div>
+            <div class="payment-desc">Du vil blive kontaktet</div>
           </div>
         </label>
 
@@ -554,7 +575,13 @@ function normalizePhone(tlf) {
   return tlf.replace(/\s/g, '').replace(/^\+45/, '');
 }
 
-async function submitForm() {
+async 
+function toggleNavn2() {
+  const vis = document.getElementById('vis-navn2').checked;
+  document.getElementById('navn2-sektion').style.display = vis ? 'block' : 'none';
+}
+
+function submitForm() {
   hideError();
 
   // Hent værdier
@@ -566,6 +593,9 @@ async function submitForm() {
   const tlf      = document.getElementById('tlf').value.trim();
   const mail     = document.getElementById('mail').value.trim();
   const virksomhed = document.getElementById('virksomhed').value.trim();
+  const navn2Fornavn = document.getElementById('navn2-fornavn').value.trim();
+  const navn2Efternavn = document.getElementById('navn2-efternavn').value.trim();
+  const navn2 = navn2Fornavn && navn2Efternavn ? navn2Fornavn + ' ' + navn2Efternavn : '';
 
   // Validering
   if (!fornavn)   return showError('Udfyld venligst dit fornavn.');
@@ -585,7 +615,7 @@ async function submitForm() {
     action: 'tilmeld',
     fornavn, efternavn, adresse, postnr, by,
     tlf: normalizePhone(tlf),
-    mail, virksomhed,
+    mail, virksomhed, navn2,
     type: selectedType,
     betalingsønske: selectedPayment,
     beloeb: selectedType === 'erhverv' ? CONFIG.KONTINGENT_ERHVERV : CONFIG.KONTINGENT_PRIVAT,
