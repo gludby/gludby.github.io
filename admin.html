@@ -874,17 +874,16 @@ function toggleDropdown(id) {
   const menu = document.getElementById(`ddm-${id}`);
   
   if (!btn.classList.contains('open')) {
-    // Beregn position
     const rect = btn.getBoundingClientRect();
-    const menuHeight = 250; // estimeret højde
+    const menuHeight = 280;
     const spaceBelow = window.innerHeight - rect.bottom;
     
     if (spaceBelow < menuHeight) {
-      // Åbn opad
-      menu.style.top = (rect.top - menuHeight + window.scrollY) + 'px';
+      // Åbn opad — position:fixed så ingen scrollY
+      menu.style.top = (rect.top - menuHeight - 4) + 'px';
     } else {
       // Åbn nedad
-      menu.style.top = (rect.bottom + 4 + window.scrollY) + 'px';
+      menu.style.top = (rect.bottom + 4) + 'px';
     }
     menu.style.left = rect.left + 'px';
   }
