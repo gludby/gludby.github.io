@@ -755,7 +755,7 @@ function renderMembers(filter=currentFilter) {
   const search = document.getElementById('search-input')?.value.toLowerCase() || '';
   if (search) {
     data = data.filter(m =>
-      `${m.fornavn} ${m.efternavn} ${m.adresse} ${m.tlf}`.toLowerCase().includes(search));
+      `${m.fornavn} ${m.efternavn} ${m.navn2Fornavn||''} ${m.navn2Efternavn||''} ${m.adresse} ${m.tlf}`.toLowerCase().includes(search));
   }
   if (filter !== 'alle') data = data.filter(m => m.status === filter);
 
