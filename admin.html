@@ -90,6 +90,7 @@ tr:hover td{background:rgba(28,61,42,0.02)}
 .badge-inaktiv{background:rgba(230,126,34,0.12);color:#BA6015}
 .badge-udgaaet{background:rgba(150,150,150,0.12);color:#666}
 .badge-frameldt{background:rgba(192,57,43,0.1);color:var(--danger)}
+.badge-mosvar{background:rgba(52,152,219,0.15);color:#2471a3}
 .badge-fraflyttet{background:rgba(100,100,200,0.1);color:#4455AA}
 .badge-erhverv{background:rgba(28,61,42,0.12);color:var(--green)}
 .badge-kontakt{background:rgba(230,80,0,0.12);color:#E65000;animation:pulse 2s infinite}
@@ -726,7 +727,7 @@ function renderOverblik() {
       <td><strong>${m.fornavn} ${m.efternavn}</strong></td>
       <td style="color:var(--muted)">${m.adresse}</td>
       <td>${m.type === 'erhverv' ? '<span class="badge badge-erhverv">Erhverv</span>' : ''}</td>
-      <td>${badgeHTML(m.status, m.betalingsønske)}</td>
+      <td>${badgeHTML(m.status, m.betalingsønske)}${m.moSvar ? '<span class="badge badge-mosvar" title="' + m.moSvar + '">📩 Har svaret</span>' : ''}</td>
       <td style="color:var(--muted);font-size:0.82rem">${formatDate(m.oprettet)}</td>
     </tr>`).join('');
 }
@@ -753,7 +754,7 @@ function renderMembers(filter=currentFilter) {
       <td style="font-size:0.83rem">${formatTlf(m.tlf)}</td>
       <td>${m.type === 'erhverv' ? '<span class="badge badge-erhverv">Erhverv</span>' : 'Husstand'}</td>
       <td style="font-size:0.78rem">${m.betalingsønske || '–'}</td>
-      <td>${badgeHTML(m.status, m.betalingsønske)}</td>
+      <td>${badgeHTML(m.status, m.betalingsønske)}${m.moSvar ? '<br><span class="badge badge-mosvar" title="' + m.moSvar + '">📩 Har svaret</span>' : ''}</td>
       <td style="display:flex;gap:0.5rem;align-items:center">
         <div class="status-dropdown" id="dd-${m.id}">
           <button class="status-dropdown-btn" onclick="toggleDropdown('${m.id}')">
