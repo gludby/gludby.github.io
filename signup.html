@@ -598,7 +598,6 @@ function submitForm() {
   const virksomhed = document.getElementById('virksomhed').value.trim();
   const navn2Fornavn = document.getElementById('navn2-fornavn').value.trim();
   const navn2Efternavn = document.getElementById('navn2-efternavn').value.trim();
-  const navn2 = navn2Fornavn && navn2Efternavn ? navn2Fornavn + ' ' + navn2Efternavn : '';
 
   // Validering
   if (!fornavn)   return showError('Udfyld venligst dit fornavn.');
@@ -618,7 +617,8 @@ function submitForm() {
     action: 'tilmeld',
     fornavn, efternavn, adresse, postnr, by,
     tlf: normalizePhone(tlf),
-    mail, virksomhed, navn2,
+    mail, virksomhed,
+    navn2Fornavn, navn2Efternavn,
     type: selectedType,
     betalingsønske: selectedPayment,
     beloeb: selectedType === 'erhverv' ? CONFIG.KONTINGENT_ERHVERV : CONFIG.KONTINGENT_PRIVAT,
