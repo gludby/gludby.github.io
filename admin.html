@@ -1176,8 +1176,8 @@ function resetAfstemning() {
 // ── SMS UDSENDELSE ───────────────────────────────────────────────
 function updateSMSPreview() {
   const tekst = document.getElementById('sms-text').value;
-  const mpLink = 'gludby.dk/betal';
-  const afmeldLink = `gludby.dk/afmeld?id=XXXXX`;
+  const mpLink = 'https://gludby.dk/betal';
+  const afmeldLink = 'https://gludby.dk/afmeld?id=XXXXX';
   const preview = tekst
     .replace('{FORNAVN}', 'Karsten')
     .replace('{MPLINK}', mpLink)
