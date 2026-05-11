@@ -433,11 +433,7 @@ textarea:focus{outline:none;border-color:var(--green)}
           Brug <code style="background:var(--cream);padding:0.1rem 0.3rem;border-radius:3px">{FORNAVN}</code> for personlig hilsen.
           Betalingslink og afmeldingslink tilføjes automatisk.
         </p>
-        <textarea id="sms-text" oninput="updateSMSPreview()">Hej {FORNAVN}! Støt og bliv medlem af Glud Borgerforening for 100 kr./år.
-Betal: {MPLINK}
-Vh. Glud Borgerforening
-
-Afmeld: {AFMELDLINK}</textarea>
+        <textarea id="sms-text" oninput="updateSMSPreview()">Hej {FORNAVN}! Støt og bliv medlem af Glud Borgerforening, 100 kr./år.
 Betal: {MPLINK}
 Vh. Glud Borgerforening
 
@@ -1184,8 +1180,8 @@ function resetAfstemning() {
 // ── SMS UDSENDELSE ───────────────────────────────────────────────
 function updateSMSPreview() {
   const tekst = document.getElementById('sms-text').value;
-  const mpLink = 'https://gludby.dk/betal';
-  const afmeldLink = 'https://gludby.dk/afmeld?id=XXXXX';
+  const mpLink = 'https://gludby.dk/b';
+  const afmeldLink = 'https://gludby.dk/a?id=XXXXX';
   const preview = tekst
     .replace('{FORNAVN}', 'Karsten')
     .replace('{MPLINK}', mpLink)
@@ -1230,8 +1226,8 @@ function confirmSend() {
 }
 
 async function sendTestSMS() {
-  const mpLink = 'https://gludby.dk/betal';
-  const afmeldLink = `https://gludby.dk/afmeld?id=TESTTOKEN`;
+  const mpLink = 'https://gludby.dk/b';
+  const afmeldLink = 'https://gludby.dk/a?id=TESTTOKEN';
   const tekst = buildSMSText('Testperson', mpLink, afmeldLink);
   const btn = document.querySelector('[onclick="sendTestSMS()"]');
   if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Sender...'; }
@@ -1254,8 +1250,8 @@ async function doSend() {
   let sendt = 0, fejl = 0;
 
   for (const m of modtagere) {
-    const mpLink = m.type === 'erhverv' ? 'https://gludby.dk/betal-erhverv' : 'https://gludby.dk/betal';
-    const afmeldLink = `https://gludby.dk/afmeld?id=${m.afmeldToken || m.id}`;
+    const mpLink = m.type === 'erhverv' ? 'https://gludby.dk/betal-erhverv' : 'https://gludby.dk/b';
+    const afmeldLink = `https://gludby.dk/a?id=${m.afmeldToken || m.id}`;
     const tekst = buildSMSText(m.fornavn, mpLink, afmeldLink);
     try {
       await sendSMSViaGateway([m.tlf], tekst);
