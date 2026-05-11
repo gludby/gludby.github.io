@@ -1176,7 +1176,7 @@ function resetAfstemning() {
 // ── SMS UDSENDELSE ───────────────────────────────────────────────
 function updateSMSPreview() {
   const tekst = document.getElementById('sms-text').value;
-  const mpLink = `mobilepay.dk/betaling?phone=${CONFIG.MOBILEPAY_NR}&amount=100`;
+  const mpLink = 'gludby.dk/betal';
   const afmeldLink = `gludby.dk/afmeld?id=XXXXX`;
   const preview = tekst
     .replace('{FORNAVN}', 'Karsten')
