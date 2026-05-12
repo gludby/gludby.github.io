@@ -99,7 +99,7 @@ async function startOpdater() {
         id: m.id,
         fornavn: m.fornavn, efternavn: m.efternavn,
         adresse: m.adresse, postnr: m.postnr, by: m.by,
-        tlf: m.tlf, mail: m.mail, type: m.type, status: m.status, noter: m.noter,
+        tlf: String(m.tlf||''), mail: m.mail, type: m.type, status: m.status, noter: m.noter||'',
         navn2Fornavn: navn2.navn2Fornavn,
         navn2Efternavn: navn2.navn2Efternavn,
       });
