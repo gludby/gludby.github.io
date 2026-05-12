@@ -90,6 +90,7 @@ tr:hover td{background:rgba(28,61,42,0.02)}
 .badge-inaktiv{background:rgba(230,126,34,0.12);color:#BA6015}
 .badge-udgaaet{background:rgba(150,150,150,0.12);color:#666}
 .badge-frameldt{background:rgba(192,57,43,0.1);color:var(--danger)}
+.mangler{display:inline-block;font-size:0.7rem;padding:1px 5px;border-radius:3px;background:rgba(192,57,43,0.1);color:var(--danger);margin-left:3px}
 .badge-mosvar{background:rgba(52,152,219,0.15);color:#2471a3}
 .badge-fraflyttet{background:rgba(100,100,200,0.1);color:#4455AA}
 .badge-erhverv{background:rgba(28,61,42,0.12);color:var(--green)}
@@ -163,6 +164,11 @@ textarea:focus{outline:none;border-color:var(--green)}
 .modal h2{font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;color:var(--green);margin-bottom:1rem}
 .modal-actions{display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.25rem}
 .field-small{margin-bottom:0.85rem}
+th.sortable{cursor:pointer;user-select:none;white-space:nowrap}
+th.sortable:hover{color:var(--green)}
+th.sortable span{display:inline-block;margin-left:4px;opacity:0.4;font-size:0.7rem}
+th.sortable.asc span::after{content:"▲";opacity:1}
+th.sortable.desc span::after{content:"▼";opacity:1}
 .field-small label{display:block;font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);margin-bottom:0.3rem}
 .field-small input,.field-small select{width:100%;padding:0.6rem 0.85rem;border:1.5px solid var(--cream-dark);border-radius:7px;font-family:inherit;font-size:0.9rem;background:var(--cream)}
 .field-small input:focus,.field-small select:focus{outline:none;border-color:var(--green)}
@@ -332,7 +338,7 @@ textarea:focus{outline:none;border-color:var(--green)}
       <div class="card" style="padding:0">
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Navn</th><th>Adresse</th><th>Tlf.</th><th>Type</th><th>Betaling</th><th>Status</th><th>Handlinger</th></tr></thead>
+            <thead><tr><th class="sortable" onclick="sortBy('navn')">Navn<span></span></th><th class="sortable" onclick="sortBy('adresse')">Adresse<span></span></th><th>Tlf.</th><th class="sortable" onclick="sortBy('type')">Type<span></span></th><th>Betaling</th><th class="sortable" onclick="sortBy('status')">Status<span></span></th><th>Handlinger</th></tr></thead>
             <tbody id="members-tbody">
               <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">Indlæser data...</td></tr>
             </tbody>
@@ -494,6 +500,13 @@ Afmeld: {AFMELDLINK}</textarea>
       <div class="field-small">
         <label>Efternavn *</label>
         <input type="text" id="m-efternavn">
+      </div>
+    </div>
+    <div style="border-top:1px solid var(--cream-dark);padding-top:0.75rem;margin-top:0.25rem">
+      <div style="font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;font-weight:600;margin-bottom:0.5rem">&#128101; Ægtefælle / samlever</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem">
+        <div class="field-small"><label>Fornavn</label><input type="text" id="m-navn2Fornavn" placeholder="Valgfrit"></div>
+        <div class="field-small"><label>Efternavn</label><input type="text" id="m-navn2Efternavn" placeholder="Valgfrit"></div>
       </div>
     </div>
     <div class="field-small">
@@ -729,7 +742,7 @@ function renderOverblik() {
   const tbody = document.getElementById('recent-tbody');
   tbody.innerHTML = recent.map(m => `
     <tr>
-      <td><strong>${m.fornavn} ${m.efternavn}</strong></td>
+      <td><strong>${m.fornavn} ${m.efternavn}</strong>${m.navn2Fornavn ? `<br><span style="font-size:0.78rem;color:var(--muted)">&#128101; ${m.navn2Fornavn} ${m.navn2Efternavn||''}</span>` : ''}</td>
       <td style="color:var(--muted)">${m.adresse}</td>
       <td>${m.type === 'erhverv' ? '<span class="badge badge-erhverv">Erhverv</span>' : ''}</td>
       <td>${badgeHTML(m.status, m.betalingsønske)}${m.moSvar ? '<span class="badge badge-mosvar" title="' + m.moSvar + '">📩 Har svaret</span>' : ''}</td>
@@ -738,14 +751,49 @@ function renderOverblik() {
 }
 
 // ── MEDLEMMER ────────────────────────────────────────────────────
+let sortField = 'navn';
+let sortDir = 'asc';
+
+function sortBy(field) {
+  if (sortField === field) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortField = field;
+    sortDir = 'asc';
+  }
+  // Opdater header styling
+  document.querySelectorAll('th.sortable').forEach(th => {
+    th.classList.remove('asc', 'desc');
+  });
+  const map = { navn: 0, adresse: 1, type: 3, status: 5 };
+  const ths = document.querySelectorAll('th.sortable');
+  const fields = ['navn', 'adresse', 'type', 'status'];
+  const idx = fields.indexOf(field);
+  if (idx >= 0) ths[idx].classList.add(sortDir);
+  renderMembers();
+}
+
 function renderMembers(filter=currentFilter) {
   let data = [...allMembers];
   const search = document.getElementById('search-input')?.value.toLowerCase() || '';
   if (search) {
     data = data.filter(m =>
-      `${m.fornavn} ${m.efternavn} ${m.adresse} ${m.tlf}`.toLowerCase().includes(search));
+      `${m.fornavn} ${m.efternavn} ${m.navn2Fornavn||''} ${m.navn2Efternavn||''} ${m.adresse} ${m.tlf}`.toLowerCase().includes(search));
   }
   if (filter !== 'alle') data = data.filter(m => m.status === filter);
+
+  // Sortering
+  data.sort((a, b) => {
+    let va, vb;
+    if (sortField === 'navn') { va = (a.fornavn + ' ' + a.efternavn).toLowerCase(); vb = (b.fornavn + ' ' + b.efternavn).toLowerCase(); }
+    else if (sortField === 'adresse') { va = (a.adresse || '').toLowerCase(); vb = (b.adresse || '').toLowerCase(); }
+    else if (sortField === 'type') { va = a.type || ''; vb = b.type || ''; }
+    else if (sortField === 'status') { va = a.status || ''; vb = b.status || ''; }
+    else { return 0; }
+    if (va < vb) return sortDir === 'asc' ? -1 : 1;
+    if (va > vb) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
 
   const tbody = document.getElementById('members-tbody');
   if (!data.length) {
@@ -754,7 +802,7 @@ function renderMembers(filter=currentFilter) {
   }
   tbody.innerHTML = data.map(m => `
     <tr>
-      <td><strong>${m.fornavn} ${m.efternavn}</strong>${!m.mail ? '<span class="mangler">mangler mail</span>' : ''}${m.virksomhed ? `<br><span style="font-size:0.78rem;color:var(--muted)">${m.virksomhed}</span>` : ''}</td>
+      <td><strong>${m.fornavn} ${m.efternavn}</strong>${!m.mail ? '<span class="mangler">mangler mail</span>' : ''}${m.navn2Fornavn ? `<br><span style="font-size:0.76rem;color:var(--muted)">&#128101; ${m.navn2Fornavn} ${m.navn2Efternavn||''}</span>` : ''}${m.virksomhed ? `<br><span style="font-size:0.78rem;color:var(--muted)">${m.virksomhed}</span>` : ''}</td>
       <td style="font-size:0.83rem">${m.adresse}, ${m.postnr} ${m.by}</td>
       <td style="font-size:0.83rem">${m.tlf ? formatTlf(m.tlf) : '<span class="mangler">mangler tlf</span>'}</td>
       <td>${m.type === 'erhverv' ? '<span class="badge badge-erhverv">Erhverv</span>' : 'Husstand'}</td>
@@ -807,7 +855,7 @@ function openModal(id) {
   if (id === 'ny-medlem') {
     document.getElementById('modal-titel').textContent = 'Tilføj nyt medlem';
     document.getElementById('edit-id').value = '';
-    ['fornavn','efternavn','adresse','tlf','mail','noter'].forEach(f => document.getElementById('m-'+f).value = '');
+    ['fornavn','efternavn','adresse','tlf','mail','noter','navn2Fornavn','navn2Efternavn'].forEach(f => document.getElementById('m-'+f).value = '');
     document.getElementById('m-postnr').value = '7130';
     document.getElementById('m-by').value = 'Juelsminde';
     document.getElementById('m-type').value = 'privat';
@@ -821,6 +869,8 @@ function redigerMedlem(m) {
   document.getElementById('modal-titel').textContent = 'Rediger medlem';
   document.getElementById('edit-id').value = m.id;
   document.getElementById('m-fornavn').value   = m.fornavn;
+  document.getElementById('m-navn2Fornavn').value  = m.navn2Fornavn || '';
+  document.getElementById('m-navn2Efternavn').value = m.navn2Efternavn || '';
   document.getElementById('m-efternavn').value = m.efternavn;
   document.getElementById('m-adresse').value   = m.adresse;
   document.getElementById('m-postnr').value    = m.postnr;
@@ -840,6 +890,8 @@ async function gemMedlem() {
     id,
     fornavn:   document.getElementById('m-fornavn').value.trim(),
     efternavn: document.getElementById('m-efternavn').value.trim(),
+    navn2Fornavn:  document.getElementById('m-navn2Fornavn').value.trim(),
+    navn2Efternavn: document.getElementById('m-navn2Efternavn').value.trim(),
     adresse:   document.getElementById('m-adresse').value.trim(),
     postnr:    document.getElementById('m-postnr').value.trim(),
     by:        document.getElementById('m-by').value.trim(),
@@ -1052,6 +1104,12 @@ function runMatching(betalinger) {
         const fs = nameSimilarity(fornavn, m.fornavn);
         const es = efternavn ? nameSimilarity(efternavn, m.efternavn) : 0.5;
         score += fs * 30 + es * 15;
+        if (m.navn2Fornavn) {
+          const fs2 = nameSimilarity(fornavn, m.navn2Fornavn);
+          const es2 = efternavn ? nameSimilarity(efternavn, m.navn2Efternavn||''): 0.5;
+          const altScore = fs2 * 30 + es2 * 15;
+          if (altScore > fs * 30 + es * 15) score = (score - (fs*30+es*15)) + altScore;
+        }
       }
       if (score > bedsteScore) { bedsteScore = score; bedsteMatch = m; }
     });
