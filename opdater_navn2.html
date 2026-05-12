@@ -82,15 +82,15 @@ async function startOpdater() {
     return;
   }
 
-  const parMembers = allMembers.filter(m => tlfMap[(m.tlf||'').replace(/\D/g,'').slice(-8)]);
+  const parMembers = allMembers.filter(m => tlfMap[String(m.tlf||'').replace(/\D/g,'').slice(-8)]);
   log('Skal opdatere ' + parMembers.length + ' par-medlemmer');
   log('tlfMap har ' + Object.keys(tlfMap).length + ' entries, fx: ' + Object.keys(tlfMap).slice(0,3).join(', '));
-  if (allMembers.length > 0) log('Sheets tlf eksempel: "' + allMembers[0].tlf + '" → renset: "' + (allMembers[0].tlf||'').replace(/\D/g,'').slice(-8) + '"');
+  if (allMembers.length > 0) log('Sheets tlf eksempel: "' + allMembers[0].tlf + '" → renset: "' + String(allMembers[0].tlf||'').replace(/\D/g,'').slice(-8) + '"');
 
   let ok = 0, fejl = 0;
   for (let i = 0; i < parMembers.length; i++) {
     const m = parMembers[i];
-    const tlf = (m.tlf||'').replace(/\D/g,'').slice(-8);
+    const tlf = String(m.tlf||'').replace(/\D/g,'').slice(-8);
     const navn2 = tlfMap[tlf];
     setProgress(i + 1, parMembers.length, m.fornavn + ' ' + m.efternavn);
     try {
