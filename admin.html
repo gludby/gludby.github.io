@@ -926,7 +926,7 @@ async function fletDublet(eksId, nyId) {
   const eks = allMembers.find(m => m.id === eksId);
   const ny = allMembers.find(m => m.id === nyId);
   if (!eks || !ny) return;
-  if (!confirm(\`Flet? Overfører tlf/mail fra ${ny.fornavn} til ${eks.fornavn} og sletter den nye tilmelding.\`)) return;
+  if (!confirm("Flet? Overfører tlf/mail fra " + ny.fornavn + " til " + eks.fornavn + " og sletter den nye tilmelding.")) return;
   // Opdater eksisterende med ny tlf og mail
   await api('updateMember', {
     id: eks.id,
@@ -953,7 +953,7 @@ async function bevarBegge(nyId) {
 
 async function sletNy(nyId) {
   const ny = allMembers.find(m => m.id === nyId);
-  if (!confirm(\`Slet ${ny?.fornavn} ${ny?.efternavn}?\`)) return;
+  if (!confirm("Slet " + (ny?.fornavn||"") + " " + (ny?.efternavn||""))) return;
   await api('updateStatus', { id: nyId, status: 'frameldt' });
   toast('Slettet.');
   await loadData();
