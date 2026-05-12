@@ -308,6 +308,12 @@ th.sortable.desc span::after{content:"▼";opacity:1}
         </div>
       </div>
 
+      <div class="card" id="dublet-panel" style="display:none;border:2px solid #E6A817">
+        <div class="card-title" style="color:#b07d00">⚠️ Mulige dubletter <span id="dublet-count" style="font-size:0.85rem;font-weight:400"></span></div>
+        <div style="font-size:0.83rem;color:var(--muted);margin-bottom:0.75rem">Nye tilmeldinger der ligner eksisterende medlemmer. Klik for at sammenligne og evt. flette.</div>
+        <div id="dublet-tbody"></div>
+      </div>
+
       <div class="card">
         <div class="card-title">Senest tilmeldte</div>
         <div class="table-wrap">
@@ -327,7 +333,10 @@ th.sortable.desc span::after{content:"▼";opacity:1}
       <div class="page-sub">Alle registrerede husstande og erhvervskunder</div>
 
       <div class="filter-bar">
-        <input type="text" id="search-input" placeholder="Søg navn, adresse, tlf…" oninput="filterMembers()">
+        <div style="position:relative;display:inline-flex;align-items:center">
+          <input type="text" id="search-input" placeholder="Søg navn, adresse, tlf…" oninput="filterMembers();toggleClearBtn()" style="padding-right:2rem">
+          <button id="search-clear" onclick="clearSearch()" style="display:none;position:absolute;right:6px;background:none;border:none;cursor:pointer;font-size:1rem;color:var(--muted);line-height:1;padding:2px">✕</button>
+        </div>
         <button class="filter-btn active" onclick="setFilter('alle',this)">Alle</button>
         <button class="filter-btn" onclick="setFilter('aktiv',this)">Aktive</button>
         <button class="filter-btn" onclick="setFilter('inaktiv',this)">Inaktive</button>
@@ -721,6 +730,9 @@ function renderOverblik() {
   document.getElementById('overblik-year').textContent = `Kontingentår ${year}`;
 
   // Vis alarm hvis nogen venter på kontakt
+  // Dublet-detektion
+  detectDubletter();
+
   const ventende = allMembers.filter(m => 
     (m.betalingsønske === 'kontakt' || m['betalingsønske'] === 'kontakt') && 
     m.status === 'ny'
@@ -849,6 +861,112 @@ function setFilter(f, el) {
   renderMembers(f);
 }
 function filterMembers() { renderMembers(currentFilter); }
+
+function normalizeAdresse(adr) {
+  return (adr || '').toLowerCase().replace(/\s+/g, ' ').trim();
+}
+
+function detectDubletter() {
+  const nyeMembers = allMembers.filter(m => m.status === 'ny');
+  const eksisterendeMembers = allMembers.filter(m => m.status !== 'ny');
+  const dubletter = [];
+
+  for (const ny of nyeMembers) {
+    const nyAdr = normalizeAdresse(ny.adresse + ' ' + ny.postnr);
+    for (const eks of eksisterendeMembers) {
+      if (eks.id === ny.id) continue;
+      const eksAdr = normalizeAdresse(eks.adresse + ' ' + eks.postnr);
+      // Match på adresse
+      if (nyAdr && eksAdr && nyAdr === eksAdr) {
+        dubletter.push({ ny, eks });
+        break;
+      }
+      // Match på efternavn + by
+      const nyNavn = (ny.efternavn || '').toLowerCase();
+      const eksNavn = (eks.efternavn || '').toLowerCase();
+      if (nyNavn && eksNavn && nyNavn === eksNavn && (ny.by||'').toLowerCase() === (eks.by||'').toLowerCase()) {
+        dubletter.push({ ny, eks });
+        break;
+      }
+    }
+  }
+
+  const panel = document.getElementById('dublet-panel');
+  const tbody = document.getElementById('dublet-tbody');
+  if (dubletter.length === 0) { panel.style.display = 'none'; return; }
+
+  panel.style.display = 'block';
+  document.getElementById('dublet-count').textContent = '(' + dubletter.length + ' fundet)';
+  tbody.innerHTML = dubletter.map(({ny, eks}) => `
+    <div style="background:var(--cream);border-radius:8px;padding:0.85rem;margin-bottom:0.75rem;display:grid;grid-template-columns:1fr 1fr auto;gap:1rem;align-items:start">
+      <div>
+        <div style="font-size:0.7rem;text-transform:uppercase;color:var(--muted);margin-bottom:0.25rem">Eksisterende</div>
+        <strong>${eks.fornavn} ${eks.efternavn}</strong><br>
+        <span style="font-size:0.82rem;color:var(--muted)">${eks.adresse}, ${eks.postnr} ${eks.by}</span><br>
+        <span style="font-size:0.82rem">📱 ${eks.tlf || '–'} &nbsp; ✉️ ${eks.mail || '–'}</span><br>
+        <span style="font-size:0.78rem;color:var(--muted)">Status: ${eks.status}</span>
+      </div>
+      <div>
+        <div style="font-size:0.7rem;text-transform:uppercase;color:#b07d00;margin-bottom:0.25rem">Ny tilmelding</div>
+        <strong>${ny.fornavn} ${ny.efternavn}</strong><br>
+        <span style="font-size:0.82rem;color:var(--muted)">${ny.adresse}, ${ny.postnr} ${ny.by}</span><br>
+        <span style="font-size:0.82rem">📱 ${ny.tlf || '–'} &nbsp; ✉️ ${ny.mail || '–'}</span><br>
+        <span style="font-size:0.78rem;color:var(--muted)">Betalingsønske: ${ny.betalingsønske || '–'}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.5rem">
+        <button class="btn btn-sm btn-primary" onclick="fletDublet('${eks.id}','${ny.id}')" style="white-space:nowrap">🔀 Flet</button>
+        <button class="btn btn-sm btn-secondary" onclick="bevarBegge('${ny.id}')" style="white-space:nowrap">Bevar begge</button>
+        <button class="btn btn-sm" style="background:rgba(192,57,43,0.1);color:var(--danger);white-space:nowrap" onclick="sletNy('${ny.id}')">🗑 Slet ny</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function fletDublet(eksId, nyId) {
+  const eks = allMembers.find(m => m.id === eksId);
+  const ny = allMembers.find(m => m.id === nyId);
+  if (!eks || !ny) return;
+  if (!confirm(\`Flet? Overfører tlf/mail fra ${ny.fornavn} til ${eks.fornavn} og sletter den nye tilmelding.\`)) return;
+  // Opdater eksisterende med ny tlf og mail
+  await api('updateMember', {
+    id: eks.id,
+    fornavn: eks.fornavn, efternavn: eks.efternavn,
+    adresse: eks.adresse, postnr: eks.postnr, by: eks.by,
+    tlf: ny.tlf || eks.tlf,
+    mail: ny.mail || eks.mail,
+    type: eks.type, status: eks.status, noter: eks.noter,
+    navn2Fornavn: eks.navn2Fornavn || '', navn2Efternavn: eks.navn2Efternavn || '',
+    betalingsønske: ny.betalingsønske || eks.betalingsønske,
+  });
+  // Sæt ny til frameldt
+  await api('updateStatus', { id: nyId, status: 'frameldt' });
+  toast('Flettet! ' + ny.fornavn + ' er nu slettet og data overført.');
+  await loadData();
+}
+
+async function bevarBegge(nyId) {
+  // Sæt ny til inaktiv så den ikke dukker op igen som dublet
+  await api('updateStatus', { id: nyId, status: 'inaktiv' });
+  toast('Begge bevaret.');
+  await loadData();
+}
+
+async function sletNy(nyId) {
+  const ny = allMembers.find(m => m.id === nyId);
+  if (!confirm(\`Slet ${ny?.fornavn} ${ny?.efternavn}?\`)) return;
+  await api('updateStatus', { id: nyId, status: 'frameldt' });
+  toast('Slettet.');
+  await loadData();
+}
+function toggleClearBtn() {
+  const val = document.getElementById('search-input').value;
+  document.getElementById('search-clear').style.display = val ? 'block' : 'none';
+}
+function clearSearch() {
+  document.getElementById('search-input').value = '';
+  document.getElementById('search-clear').style.display = 'none';
+  filterMembers();
+}
 
 // ── MODALS ───────────────────────────────────────────────────────
 function openModal(id) {
