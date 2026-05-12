@@ -495,14 +495,6 @@
       </div>
     </div>
 
-    <div style="margin-bottom:1rem;display:flex;align-items:flex-start;gap:0.6rem">
-      <input type="checkbox" id="gdpr-accept" style="width:1.1rem;height:1.1rem;margin-top:0.15rem;flex-shrink:0;cursor:pointer;accent-color:var(--green)">
-      <label for="gdpr-accept" style="font-size:0.85rem;color:var(--text-muted);cursor:pointer;line-height:1.4">
-        Jeg accepterer, at Glud og Omegns Borgerforening opbevarer mine oplysninger til brug for kontingentopkrævning.
-        <a href="https://gludby.dk/privatlivspolitik" target="_blank" style="color:var(--green)">Læs vores privatlivspolitik</a>.
-      </label>
-    </div>
-
     <button class="submit-btn" id="submit-btn" onclick="submitForm()">
       Tilmeld mig som medlem
     </button>
@@ -616,7 +608,6 @@ function submitForm() {
   if (!by)        return showError('Udfyld venligst din by.');
   if (!tlf || !validateTlf(tlf)) return showError('Udfyld venligst et gyldigt dansk mobilnummer (8 cifre).');
   if (selectedType === 'erhverv' && !virksomhed) return showError('Udfyld venligst virksomhedens navn.');
-  if (!document.getElementById('gdpr-accept').checked) return showError('Du skal acceptere privatlivspolitikken for at tilmelde dig.');
 
   // Deaktiver knap
   const btn = document.getElementById('submit-btn');
@@ -721,6 +712,7 @@ function showConfirmation(data, duplikat) {
   }
 
   document.getElementById('payment-instruction').innerHTML = html;
+  document.getElementById('gdpr-note').style.display = 'block';
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
