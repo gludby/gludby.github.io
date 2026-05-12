@@ -419,7 +419,12 @@ th.sortable.desc span::after{content:"▼";opacity:1}
     <!-- UDSENDELSE -->
     <div class="page" id="page-udsendelse">
       <div class="page-title">Udsend opkrævning</div>
-      <div class="page-sub">Send SMS til medlemmer med betalingslink</div>
+      <div class="page-sub">Send SMS eller mail til medlemmer med betalingslink</div>
+
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem">
+        <button id="kanal-sms" class="btn btn-primary" onclick="vælgKanal('sms')">📱 SMS</button>
+        <button id="kanal-mail" class="btn btn-secondary" onclick="vælgKanal('mail')">✉️ E-mail</button>
+      </div>
 
       <div class="card">
         <div class="card-title">Modtagere</div>
@@ -462,17 +467,51 @@ Afmeld: {AFMELDLINK}</textarea>
         </div>
       </div>
 
+      <div class="card" id="mail-besked-card" style="display:none">
+        <div class="card-title">Mail-besked</div>
+        <p style="font-size:0.83rem;color:var(--muted);margin-bottom:0.75rem">
+          Brug <code style="background:var(--cream);padding:0.1rem 0.3rem;border-radius:3px">{FORNAVN}</code> for personlig hilsen.
+          Betalingslink tilføjes automatisk.
+        </p>
+        <div style="margin-bottom:0.75rem">
+          <label style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);display:block;margin-bottom:0.3rem">Emne</label>
+          <input type="text" id="mail-subject" value="Kontingent 2026 – Glud og Omegns Borgerforening" style="width:100%;padding:0.6rem 0.85rem;border:1.5px solid var(--cream-dark);border-radius:7px;font-family:inherit;font-size:0.9rem;background:var(--cream)">
+        </div>
+        <label style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted);display:block;margin-bottom:0.3rem">Besked</label>
+        <textarea id="mail-text" rows="8" style="width:100%;padding:0.75rem;border:1.5px solid var(--cream-dark);border-radius:7px;font-family:inherit;font-size:0.9rem;background:var(--cream);resize:vertical">Hej {FORNAVN}
+
+Vil du støtte Glud og Omegns Borgerforening? Bliv medlem for kun 100 kr./år.
+
+Betal her: {MPLINK}
+
+Ønsker du ikke at modtage flere henvendelser, kan du afmelde dig her: {AFMELDLINK}
+
+Vh. Glud og Omegns Borgerforening
+indhold@gludby.dk</textarea>
+        <div style="margin-top:0.75rem;font-size:0.83rem;color:var(--muted)">
+          📬 Kun medlemmer <strong>med e-mail</strong> modtager mailen.
+          Dem uden mail springes over.
+        </div>
+      </div>
+
       <div class="card">
         <div class="card-title">Afsend</div>
         <div id="send-summary" style="margin-bottom:1rem;font-size:0.88rem;color:var(--muted)">
           Beregner modtagere...
         </div>
-        <div style="display:flex;gap:0.75rem">
+        <div style="display:flex;gap:0.75rem" id="sms-send-btns">
           <button class="btn btn-secondary" onclick="sendTestSMS()">🧪 Send test til mig selv</button>
-          <button class="btn btn-primary" id="send-btn" onclick="confirmSend()">📨 Send til alle modtagere</button>
+          <button class="btn btn-primary" id="send-btn" onclick="confirmSend()">📨 Send SMS til alle</button>
         </div>
-        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem">
+        <div id="mail-send-btns" style="display:none;display:flex;gap:0.75rem">
+          <button class="btn btn-secondary" onclick="sendTestMail()">🧪 Send testmail til mig selv</button>
+          <button class="btn btn-primary" id="mail-btn" onclick="confirmMailSend()">✉️ Send mail til alle</button>
+        </div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem" id="sms-info">
           GatewayAPI · Afsender: Gludby.dk · Ca. 0,35 kr./SMS
+        </div>
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem" id="mail-info" style="display:none">
+          Sendes via Google / Gmail · Gratis
         </div>
       </div>
     </div>
@@ -1351,6 +1390,68 @@ function resetAfstemning() {
   document.getElementById('match-results').style.display = 'none';
   document.getElementById('csv-input').value = '';
   matchResults = { auto: [], usikker: [], ingen: [] };
+}
+
+// ── KANAL VÆLGER ─────────────────────────────────────────────────
+let aktuelKanal = 'sms';
+
+function vælgKanal(kanal) {
+  aktuelKanal = kanal;
+  const erSMS = kanal === 'sms';
+  document.getElementById('kanal-sms').className = erSMS ? 'btn btn-primary' : 'btn btn-secondary';
+  document.getElementById('kanal-mail').className = erSMS ? 'btn btn-secondary' : 'btn btn-primary';
+  document.querySelector('.card .card-title + p + div + div')?.style; // reset
+  document.getElementById('mail-besked-card').style.display = erSMS ? 'none' : 'block';
+  document.getElementById('sms-send-btns').style.display = erSMS ? 'flex' : 'none';
+  document.getElementById('mail-send-btns').style.display = erSMS ? 'none' : 'flex';
+  document.getElementById('sms-info').style.display = erSMS ? 'block' : 'none';
+  document.getElementById('mail-info').style.display = erSMS ? 'none' : 'block';
+  // Skjul SMS-besked kort når mail er valgt
+  document.querySelectorAll('#page-udsendelse .card')[1].style.display = erSMS ? 'block' : 'none';
+  updateSendSummary();
+}
+
+function getMailModtagere() {
+  const modtagere = getModtagere();
+  return modtagere.filter(m => m.mail && m.mail.includes('@'));
+}
+
+async function sendTestMail() {
+  const subject = document.getElementById('mail-subject').value;
+  const tekst = document.getElementById('mail-text').value;
+  const mpLink = 'https://gludby.dk/b';
+  const afmeldLink = 'https://gludby.dk/a?id=TESTTOKEN';
+  const besked = tekst.replace('{FORNAVN}', 'Testperson').replace('{MPLINK}', mpLink).replace('{AFMELDLINK}', afmeldLink);
+  const btn = document.querySelector('[onclick="sendTestMail()"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Sender...'; }
+  try {
+    await api('sendMail', { til: CONFIG.TEST_MAIL || 'gwinther@gmail.com', emne: subject, besked });
+    toast('Testmail sendt!');
+  } catch(e) { toast('Fejl: ' + e.message, 'error'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = '🧪 Send testmail til mig selv'; } }
+}
+
+async function confirmMailSend() {
+  const modtagere = getMailModtagere();
+  if (!modtagere.length) { toast('Ingen modtagere med mail valgt', 'error'); return; }
+  if (!confirm('Send mail til ' + modtagere.length + ' modtagere?')) return;
+  const subject = document.getElementById('mail-subject').value;
+  const tekst = document.getElementById('mail-text').value;
+  const btn = document.getElementById('mail-btn');
+  btn.disabled = true; btn.textContent = 'Sender...';
+  let sendt = 0, fejl = 0;
+  for (const m of modtagere) {
+    const mpLink = m.type === 'erhverv' ? 'https://gludby.dk/betal-erhverv' : 'https://gludby.dk/b';
+    const afmeldLink = 'https://gludby.dk/a?id=' + (m.afmeldToken || m.id);
+    const besked = tekst.replace('{FORNAVN}', m.fornavn).replace('{MPLINK}', mpLink).replace('{AFMELDLINK}', afmeldLink);
+    try {
+      await api('sendMail', { til: m.mail, emne: subject, besked });
+      sendt++;
+    } catch(e) { fejl++; }
+    await new Promise(r => setTimeout(r, 300));
+  }
+  btn.disabled = false; btn.textContent = '✉️ Send mail til alle';
+  toast(sendt + ' mails sendt' + (fejl ? ', ' + fejl + ' fejlede' : '') + '.');
 }
 
 // ── SMS UDSENDELSE ───────────────────────────────────────────────
