@@ -443,18 +443,7 @@ th.sortable.desc span::after{content:"▼";opacity:1}
             <span class="badge badge-aktiv" id="count-aktiv">–</span>
           </label>
         </div>
-        <div style="margin-top:0.75rem">
-          <button class="btn btn-secondary" style="font-size:0.82rem" onclick="toggleManuelValg()">☑️ Manuel valg af modtagere</button>
-        </div>
-        <div id="manuel-valg-panel" style="display:none;margin-top:1rem">
-          <div style="font-size:0.78rem;color:var(--muted);margin-bottom:0.5rem">Sæt kryds ved præcis de medlemmer du vil sende til:</div>
-          <div style="margin-bottom:0.5rem;display:flex;gap:0.5rem">
-            <button class="btn btn-secondary" style="font-size:0.78rem;padding:0.3rem 0.75rem" onclick="vælgAlleManuel()">Vælg alle</button>
-            <button class="btn btn-secondary" style="font-size:0.78rem;padding:0.3rem 0.75rem" onclick="fravælgAlleManuel()">Fravælg alle</button>
-          </div>
-          <div id="manuel-valg-liste" style="max-height:250px;overflow-y:auto;border:1px solid var(--cream-dark);border-radius:8px;padding:0.5rem"></div>
-        </div>
-        <div style="background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.2);border-radius:8px;padding:0.85rem;font-size:0.82rem;color:var(--danger);margin-top:0.75rem">
+        <div style="background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.2);border-radius:8px;padding:0.85rem;font-size:0.82rem;color:var(--danger)">
           ⚠️ Frameldte og udgåede modtager aldrig opkrævninger — de er automatisk ekskluderet.
         </div>
       </div>
@@ -514,14 +503,14 @@ indhold@gludby.dk</textarea>
           <button class="btn btn-secondary" onclick="sendTestSMS()">🧪 Send test til mig selv</button>
           <button class="btn btn-primary" id="send-btn" onclick="confirmSend()">📨 Send SMS til alle</button>
         </div>
-        <div id="mail-send-btns" style="display:none;gap:0.75rem">
+        <div id="mail-send-btns" style="display:none;display:flex;gap:0.75rem">
           <button class="btn btn-secondary" onclick="sendTestMail()">🧪 Send testmail til mig selv</button>
           <button class="btn btn-primary" id="mail-btn" onclick="confirmMailSend()">✉️ Send mail til alle</button>
         </div>
         <div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem" id="sms-info">
           GatewayAPI · Afsender: Gludby.dk · Ca. 0,35 kr./SMS
         </div>
-        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem;display:none" id="mail-info">
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem" id="mail-info" style="display:none">
           Sendes via Google / Gmail · Gratis
         </div>
       </div>
@@ -1405,45 +1394,6 @@ function resetAfstemning() {
 
 // ── KANAL VÆLGER ─────────────────────────────────────────────────
 let aktuelKanal = 'sms';
-
-let manuelValgAktiv = false;
-
-function toggleManuelValg() {
-  manuelValgAktiv = !manuelValgAktiv;
-  const panel = document.getElementById('manuel-valg-panel');
-  panel.style.display = manuelValgAktiv ? 'block' : 'none';
-  if (manuelValgAktiv) renderManuelValg();
-  updateSendSummary();
-}
-
-function renderManuelValg() {
-  const liste = document.getElementById('manuel-valg-liste');
-  const visibleMembers = allMembers.filter(m => !['frameldt','udgaaet'].includes(m.status));
-  liste.innerHTML = visibleMembers.map(m => `
-    <label style="display:flex;align-items:center;gap:0.6rem;padding:0.35rem 0.5rem;border-radius:5px;cursor:pointer;font-size:0.85rem;border-bottom:1px solid var(--cream-dark)">
-      <input type="checkbox" class="manuel-cb" data-id="${m.id}" style="cursor:pointer;accent-color:var(--green)">
-      <span>${m.fornavn} ${m.efternavn}${m.navn2Fornavn ? ' & ' + m.navn2Fornavn + ' ' + (m.navn2Efternavn||'') : ''}</span>
-      <span class="badge badge-${m.status}" style="margin-left:auto">${m.status}</span>
-    </label>
-  `).join('');
-  document.querySelectorAll('.manuel-cb').forEach(cb => cb.addEventListener('change', updateSendSummary));
-}
-
-function vælgAlleManuel() {
-  document.querySelectorAll('.manuel-cb').forEach(cb => cb.checked = true);
-  updateSendSummary();
-}
-
-function fravælgAlleManuel() {
-  document.querySelectorAll('.manuel-cb').forEach(cb => cb.checked = false);
-  updateSendSummary();
-}
-
-function getManuelValgte() {
-  return Array.from(document.querySelectorAll('.manuel-cb:checked'))
-    .map(cb => allMembers.find(m => m.id === cb.dataset.id))
-    .filter(Boolean);
-}
 
 function vælgKanal(kanal) {
   aktuelKanal = kanal;
