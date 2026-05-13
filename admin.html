@@ -1553,6 +1553,9 @@ function updateSendSummary() {
 }
 
 function getModtagere() {
+  if (manuelValgAktiv) {
+    return getManuelValgte().filter(m => m.tlf);
+  }
   let m = [];
   if (document.getElementById('recv-ny')?.checked)     m.push(...allMembers.filter(x=>x.status==='ny' && x.tlf));
   if (document.getElementById('recv-inaktiv')?.checked) m.push(...allMembers.filter(x=>x.status==='inaktiv' && x.tlf));
