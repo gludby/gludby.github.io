@@ -513,11 +513,11 @@ indhold@gludby.dk</textarea>
         </div>
         <div style="display:flex;gap:0.75rem" id="sms-send-btns">
           <button class="btn btn-secondary" onclick="sendTestSMS()">🧪 Send test til mig selv</button>
-          <button class="btn btn-primary" id="send-btn" onclick="confirmSend()">📨 Send SMS til alle</button>
+          <button class="btn btn-primary" id="send-btn" onclick="confirmSend()">📨 Send SMS til valgte</button>
         </div>
         <div id="mail-send-btns" style="display:none;flex-wrap:wrap;gap:0.75rem">
           <button class="btn btn-secondary" onclick="sendTestMail()">🧪 Send testmail til mig selv</button>
-          <button class="btn btn-primary" id="mail-btn" onclick="confirmMailSend()">✉️ Send mail til alle</button>
+          <button class="btn btn-primary" id="mail-btn" onclick="confirmMailSend()">✉️ Send mail til valgte</button>
         </div>
         <div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem" id="sms-info">
           GatewayAPI · Afsender: Gludby.dk · Ca. 0,35 kr./SMS
@@ -1468,19 +1468,14 @@ function vælgKanal(kanal) {
   const erSMS = kanal === 'sms';
   document.getElementById('kanal-sms').className = erSMS ? 'btn btn-primary' : 'btn btn-secondary';
   document.getElementById('kanal-mail').className = erSMS ? 'btn btn-secondary' : 'btn btn-primary';
-  document.querySelector('.card .card-title + p + div + div')?.style; // reset
   document.getElementById('mail-besked-card').style.display = erSMS ? 'none' : 'block';
-  document.getElementById('sms-send-btns').style.display = erSMS ? 'flex' : 'none';
-  const mailBtns = document.getElementById('mail-send-btns');
-  mailBtns.style.display = erSMS ? 'none' : 'flex';
-  mailBtns.style.gap = '0.75rem';
-  mailBtns.style.flexWrap = 'wrap';
+  document.getElementById('sms-send-btns').style.cssText = erSMS ? 'display:flex;gap:0.75rem' : 'display:none';
+  document.getElementById('mail-send-btns').style.cssText = erSMS ? 'display:none' : 'display:flex;gap:0.75rem;flex-wrap:wrap';
   document.getElementById('sms-info').style.display = erSMS ? 'block' : 'none';
   document.getElementById('mail-info').style.display = erSMS ? 'none' : 'block';
-  // Skjul SMS-besked kort når mail er valgt
-  // Vis/skjul SMS-besked kort
-  const cards = document.querySelectorAll('#page-udsendelse .card');
-  if (cards[1]) cards[1].style.display = erSMS ? 'block' : 'none';
+  document.querySelectorAll('#page-udsendelse .card').forEach(card => {
+    if (card.querySelector('#sms-text')) card.style.display = erSMS ? 'block' : 'none';
+  });
   updateSendSummary();
 }
 
