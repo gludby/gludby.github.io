@@ -446,6 +446,20 @@ th.sortable.desc span::after{content:"▼";opacity:1}
         <div style="background:rgba(192,57,43,0.06);border:1px solid rgba(192,57,43,0.2);border-radius:8px;padding:0.85rem;font-size:0.82rem;color:var(--danger)">
           ⚠️ Frameldte og udgåede modtager aldrig opkrævninger — de er automatisk ekskluderet.
         </div>
+        <div style="margin-top:1rem;border-top:1px solid var(--cream-dark);padding-top:0.85rem">
+          <button onclick="toggleManuelValg()" id="manuel-valg-btn" style="background:none;border:1.5px solid var(--cream-dark);border-radius:7px;padding:0.5rem 1rem;cursor:pointer;font-size:0.85rem;color:var(--text);font-family:inherit">
+            ☑️ Manuel valg af modtagere
+          </button>
+          <div id="manuel-valg-panel" style="display:none;margin-top:0.75rem">
+            <input type="text" id="manuel-søg" placeholder="Søg navn..." oninput="renderManuelValg()" style="width:100%;padding:0.5rem 0.75rem;border:1.5px solid var(--cream-dark);border-radius:7px;font-family:inherit;font-size:0.85rem;background:var(--cream);margin-bottom:0.5rem">
+            <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
+              <button onclick="vælgAlleManuel()" style="background:none;border:1px solid var(--cream-dark);border-radius:6px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.78rem;font-family:inherit">Vælg alle</button>
+              <button onclick="fravælgAlleManuel()" style="background:none;border:1px solid var(--cream-dark);border-radius:6px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.78rem;font-family:inherit">Fravælg alle</button>
+              <span id="manuel-tæller" style="font-size:0.82rem;color:var(--muted);margin-left:auto;align-self:center"></span>
+            </div>
+            <div id="manuel-valg-liste" style="max-height:250px;overflow-y:auto;border:1px solid var(--cream-dark);border-radius:8px"></div>
+          </div>
+        </div>
       </div>
 
       <div class="card">
@@ -503,14 +517,14 @@ indhold@gludby.dk</textarea>
           <button class="btn btn-secondary" onclick="sendTestSMS()">🧪 Send test til mig selv</button>
           <button class="btn btn-primary" id="send-btn" onclick="confirmSend()">📨 Send SMS til alle</button>
         </div>
-        <div id="mail-send-btns" style="display:none;display:flex;gap:0.75rem">
+        <div id="mail-send-btns" style="display:none;gap:0.75rem">
           <button class="btn btn-secondary" onclick="sendTestMail()">🧪 Send testmail til mig selv</button>
           <button class="btn btn-primary" id="mail-btn" onclick="confirmMailSend()">✉️ Send mail til alle</button>
         </div>
         <div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem" id="sms-info">
           GatewayAPI · Afsender: Gludby.dk · Ca. 0,35 kr./SMS
         </div>
-        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem" id="mail-info" style="display:none">
+        <div style="font-size:0.78rem;color:var(--muted);margin-top:0.6rem;display:none" id="mail-info">
           Sendes via Google / Gmail · Gratis
         </div>
       </div>
@@ -1394,6 +1408,60 @@ function resetAfstemning() {
 
 // ── KANAL VÆLGER ─────────────────────────────────────────────────
 let aktuelKanal = 'sms';
+let manuelValgAktiv = false;
+
+function toggleManuelValg() {
+  manuelValgAktiv = !manuelValgAktiv;
+  document.getElementById('manuel-valg-panel').style.display = manuelValgAktiv ? 'block' : 'none';
+  document.getElementById('manuel-valg-btn').style.borderColor = manuelValgAktiv ? 'var(--green)' : 'var(--cream-dark)';
+  document.getElementById('manuel-valg-btn').style.color = manuelValgAktiv ? 'var(--green)' : 'var(--text)';
+  if (manuelValgAktiv) renderManuelValg();
+  updateSendSummary();
+}
+
+function renderManuelValg() {
+  const søg = (document.getElementById('manuel-søg')?.value || '').toLowerCase();
+  const liste = document.getElementById('manuel-valg-liste');
+  const visibleMembers = allMembers.filter(m =>
+    !['frameldt','udgaaet'].includes(m.status) &&
+    (!søg || (m.fornavn + ' ' + m.efternavn + ' ' + (m.navn2Fornavn||'')).toLowerCase().includes(søg))
+  );
+  const valgte = new Set(Array.from(document.querySelectorAll('.manuel-cb:checked')).map(cb => cb.dataset.id));
+  liste.innerHTML = visibleMembers.map(m => `
+    <label style="display:flex;align-items:center;gap:0.6rem;padding:0.4rem 0.75rem;cursor:pointer;font-size:0.85rem;border-bottom:1px solid var(--cream-dark)">
+      <input type="checkbox" class="manuel-cb" data-id="${m.id}" ${valgte.has(m.id) ? 'checked' : ''} style="cursor:pointer;accent-color:var(--green);width:1rem;height:1rem;flex-shrink:0">
+      <span>${m.fornavn} ${m.efternavn}${m.navn2Fornavn ? ' & ' + m.navn2Fornavn + ' ' + (m.navn2Efternavn||'') : ''}</span>
+      <span class="badge badge-${m.status}" style="margin-left:auto;flex-shrink:0">${m.status}</span>
+    </label>
+  `).join('');
+  document.querySelectorAll('.manuel-cb').forEach(cb => cb.addEventListener('change', () => {
+    updateSendSummary();
+    opdaterManuelTæller();
+  }));
+  opdaterManuelTæller();
+}
+
+function opdaterManuelTæller() {
+  const antal = document.querySelectorAll('.manuel-cb:checked').length;
+  const el = document.getElementById('manuel-tæller');
+  if (el) el.textContent = antal + ' valgt';
+}
+
+function vælgAlleManuel() {
+  document.querySelectorAll('.manuel-cb').forEach(cb => cb.checked = true);
+  updateSendSummary(); opdaterManuelTæller();
+}
+
+function fravælgAlleManuel() {
+  document.querySelectorAll('.manuel-cb').forEach(cb => cb.checked = false);
+  updateSendSummary(); opdaterManuelTæller();
+}
+
+function getManuelValgte() {
+  return Array.from(document.querySelectorAll('.manuel-cb:checked'))
+    .map(cb => allMembers.find(m => m.id === cb.dataset.id))
+    .filter(Boolean);
+}
 
 function vælgKanal(kanal) {
   aktuelKanal = kanal;
