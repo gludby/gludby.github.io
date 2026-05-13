@@ -447,9 +447,7 @@ th.sortable.desc span::after{content:"▼";opacity:1}
           ⚠️ Frameldte og udgåede modtager aldrig opkrævninger — de er automatisk ekskluderet.
         </div>
         <div style="margin-top:1rem;border-top:1px solid var(--cream-dark);padding-top:0.85rem">
-          <button onclick="toggleManuelValg()" id="manuel-valg-btn" style="background:none;border:1.5px solid var(--cream-dark);border-radius:7px;padding:0.5rem 1rem;cursor:pointer;font-size:0.85rem;color:var(--text);font-family:inherit">
-            ☑️ Manuel valg af modtagere
-          </button>
+          <button onclick="toggleManuelValg()" id="manuel-valg-btn" class="btn btn-secondary" style="font-size:0.85rem">☑️ Manuel valg af modtagere</button>
           <div id="manuel-valg-panel" style="display:none;margin-top:0.75rem">
             <input type="text" id="manuel-søg" placeholder="Søg navn..." oninput="renderManuelValg()" style="width:100%;padding:0.5rem 0.75rem;border:1.5px solid var(--cream-dark);border-radius:7px;font-family:inherit;font-size:0.85rem;background:var(--cream);margin-bottom:0.5rem">
             <div style="display:flex;gap:0.5rem;margin-bottom:0.5rem">
@@ -1472,10 +1470,13 @@ function vælgKanal(kanal) {
   document.getElementById('mail-besked-card').style.display = erSMS ? 'none' : 'block';
   document.getElementById('sms-send-btns').style.display = erSMS ? 'flex' : 'none';
   document.getElementById('mail-send-btns').style.display = erSMS ? 'none' : 'flex';
+  document.getElementById('mail-send-btns').style.gap = '0.75rem';
   document.getElementById('sms-info').style.display = erSMS ? 'block' : 'none';
   document.getElementById('mail-info').style.display = erSMS ? 'none' : 'block';
   // Skjul SMS-besked kort når mail er valgt
-  document.querySelectorAll('#page-udsendelse .card')[1].style.display = erSMS ? 'block' : 'none';
+  // Vis/skjul SMS-besked kort
+  const cards = document.querySelectorAll('#page-udsendelse .card');
+  if (cards[1]) cards[1].style.display = erSMS ? 'block' : 'none';
   updateSendSummary();
 }
 
