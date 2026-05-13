@@ -1410,9 +1410,11 @@ let manuelValgAktiv = false;
 
 function toggleManuelValg() {
   manuelValgAktiv = !manuelValgAktiv;
-  document.getElementById('manuel-valg-panel').style.display = manuelValgAktiv ? 'block' : 'none';
-  document.getElementById('manuel-valg-btn').style.borderColor = manuelValgAktiv ? 'var(--green)' : 'var(--cream-dark)';
-  document.getElementById('manuel-valg-btn').style.color = manuelValgAktiv ? 'var(--green)' : 'var(--text)';
+  const panel = document.getElementById('manuel-valg-panel');
+  const btn = document.getElementById('manuel-valg-btn');
+  panel.style.display = manuelValgAktiv ? 'block' : 'none';
+  btn.textContent = manuelValgAktiv ? 'Luk manuel valg' : 'Manuel valg af modtagere';
+  btn.className = manuelValgAktiv ? 'btn btn-primary' : 'btn btn-secondary';
   if (manuelValgAktiv) renderManuelValg();
   updateSendSummary();
 }
