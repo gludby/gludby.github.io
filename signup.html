@@ -713,11 +713,12 @@ function markerSelvBetalt() {
 
 <script>
   function sendHeight() {
-    window.parent.postMessage({ frameHeight: document.body.scrollHeight }, '*');
+    var height = document.documentElement.scrollHeight;
+    window.parent.postMessage({ frameHeight: height }, '*');
   }
   window.addEventListener('load', sendHeight);
-  window.addEventListener('resize', sendHeight);
-  setInterval(sendHeight, 500);
+  var observer = new ResizeObserver(sendHeight);
+  observer.observe(document.body);
 </script>
 </body>
 </html>
