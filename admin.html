@@ -724,7 +724,7 @@ function showPage(id) {
 // ── DATA FRA GOOGLE SHEETS ───────────────────────────────────────
 // Læs data via Google Sheets API (ingen CORS)
 async function sheetsGet(range) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}?key=${CONFIG.SHEETS_API_KEY}`;
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SHEET_ID}/values/${encodeURIComponent(range)}?key=${CONFIG.SHEETS_API_KEY}&_=${Date.now()}`;
   const resp = await fetch(url);
   if (!resp.ok) throw new Error('Sheets API fejl: ' + resp.status);
   return resp.json();
@@ -1109,7 +1109,7 @@ async function gemMedlem() {
     if (result.success) {
       closeModal('modal-ny-medlem');
       toast(id ? 'Medlem opdateret' : 'Nyt medlem tilføjet');
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 2000));
       await loadAll();
     } else { toast('Fejl: ' + (result.message || 'Ukendt'), 'error'); }
   } catch(e) { toast('Netværksfejl', 'error'); }
