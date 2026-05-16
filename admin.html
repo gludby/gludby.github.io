@@ -462,6 +462,13 @@ th.sortable.desc span::after{content:"▼";opacity:1}
 
       <div class="card">
         <div class="card-title">SMS-besked</div>
+        <div style="margin-bottom:0.85rem;display:flex;align-items:center;gap:0.75rem">
+          <label style="font-size:0.78rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--muted)">Skabelon</label>
+          <select id="sms-skabelon" onchange="vælgSMSSkabelon()" style="padding:0.4rem 0.75rem;border:1.5px solid var(--cream-dark);border-radius:7px;font-family:inherit;font-size:0.88rem;background:var(--cream)">
+            <option value="privat">Privat (100 kr.)</option>
+            <option value="erhverv">Erhverv (750 kr.)</option>
+          </select>
+        </div>
         <p style="font-size:0.83rem;color:var(--muted);margin-bottom:0.75rem">
           Brug <code style="background:var(--cream);padding:0.1rem 0.3rem;border-radius:3px">{FORNAVN}</code> for personlig hilsen.
           Betalingslink og afmeldingslink tilføjes automatisk.
@@ -923,6 +930,17 @@ function setFilter(f, el) {
 }
 function filterMembers() { renderMembers(currentFilter); }
 
+function vælgSMSSkabelon() {
+  const skabelon = document.getElementById('sms-skabelon').value;
+  const textarea = document.getElementById('sms-text');
+  if (skabelon === 'erhverv') {
+    textarea.value = 'Hej {FORNAVN}! Støt og bliv medlem af Glud Borgerforening, 750 kr./år.\nBetal: {MPLINK}\nVh. Glud Borgerforening\n\nAfmeld: {AFMELDLINK}';
+  } else {
+    textarea.value = 'Hej {FORNAVN}! Støt og bliv medlem af Glud Borgerforening, 100 kr./år.\nBetal: {MPLINK}\nVh. Glud Borgerforening\n\nAfmeld: {AFMELDLINK}';
+  }
+  updateSMSPreview();
+}
+
 function normalizeAdresse(adr) {
   return (adr || '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
@@ -1091,6 +1109,7 @@ async function gemMedlem() {
     if (result.success) {
       closeModal('modal-ny-medlem');
       toast(id ? 'Medlem opdateret' : 'Nyt medlem tilføjet');
+      await new Promise(r => setTimeout(r, 1000));
       await loadAll();
     } else { toast('Fejl: ' + (result.message || 'Ukendt'), 'error'); }
   } catch(e) { toast('Netværksfejl', 'error'); }
