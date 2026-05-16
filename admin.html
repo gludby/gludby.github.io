@@ -347,7 +347,7 @@ th.sortable.desc span::after{content:"▼";opacity:1}
       <div class="card" style="padding:0">
         <div class="table-wrap">
           <table>
-            <thead><tr><th class="sortable" onclick="sortBy('navn')">Navn<span></span></th><th class="sortable" onclick="sortBy('adresse')">Adresse<span></span></th><th>Tlf.</th><th class="sortable" onclick="sortBy('type')">Type<span></span></th><th>Betaling</th><th class="sortable" onclick="sortBy('status')">Status<span></span></th><th>Handlinger</th></tr></thead>
+            <thead><tr><th class="sortable" onclick="sortBy('navn')">Navn<span></span></th><th class="sortable" onclick="sortBy('adresse')">Adresse<span></span></th><th>Tlf.</th><th class="sortable" onclick="sortBy('type')">Type<span></span></th><th class="sortable" onclick="sortBy('betaling')">Betaling<span></span></th><th class="sortable" onclick="sortBy('status')">Status<span></span></th><th>Handlinger</th></tr></thead>
             <tbody id="members-tbody">
               <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:2rem">Indlæser data...</td></tr>
             </tbody>
@@ -613,6 +613,15 @@ indhold@gludby.dk</textarea>
       </div>
     </div>
     <div class="field-small">
+      <label>Betalingsmetode</label>
+      <select id="m-betalingsønske">
+        <option value="">– Ikke angivet –</option>
+        <option value="mobilepay">MobilePay</option>
+        <option value="bankoverforsel">Bankoverførsel</option>
+        <option value="kontakt">Kontant betaling</option>
+      </select>
+    </div>
+    <div class="field-small">
       <label>Noter</label>
       <input type="text" id="m-noter" placeholder="Evt. bemærkning...">
     </div>
@@ -852,6 +861,7 @@ function renderMembers(filter=currentFilter) {
     else if (sortField === 'adresse') { va = (a.adresse || '').toLowerCase(); vb = (b.adresse || '').toLowerCase(); }
     else if (sortField === 'type') { va = a.type || ''; vb = b.type || ''; }
     else if (sortField === 'status') { va = a.status || ''; vb = b.status || ''; }
+    else if (sortField === 'betaling') { va = a.betalingsønske || ''; vb = b.betalingsønske || ''; }
     else { return 0; }
     if (va < vb) return sortDir === 'asc' ? -1 : 1;
     if (va > vb) return sortDir === 'asc' ? 1 : -1;
@@ -1025,6 +1035,7 @@ function openModal(id) {
     document.getElementById('modal-titel').textContent = 'Tilføj nyt medlem';
     document.getElementById('edit-id').value = '';
     ['fornavn','efternavn','adresse','tlf','mail','noter','navn2Fornavn','navn2Efternavn'].forEach(f => document.getElementById('m-'+f).value = '');
+    document.getElementById('m-betalingsønske').value = '';
     document.getElementById('m-postnr').value = '7130';
     document.getElementById('m-by').value = 'Juelsminde';
     document.getElementById('m-type').value = 'privat';
@@ -1049,6 +1060,7 @@ function redigerMedlem(m) {
   document.getElementById('m-type').value      = m.type;
   document.getElementById('m-status').value    = m.status;
   document.getElementById('m-noter').value     = m.noter || '';
+  document.getElementById('m-betalingsønske').value = m.betalingsønske || '';
   document.getElementById('modal-ny-medlem').classList.add('open');
 }
 
@@ -1069,6 +1081,7 @@ async function gemMedlem() {
     type:      document.getElementById('m-type').value,
     status:    document.getElementById('m-status').value,
     noter:     document.getElementById('m-noter').value.trim(),
+    betalingsønske: document.getElementById('m-betalingsønske').value,
   };
   if (!data.fornavn || !data.efternavn || !data.adresse || !data.tlf) {
     return toast('Udfyld alle påkrævede felter', 'error');
