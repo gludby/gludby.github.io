@@ -569,8 +569,7 @@ function normalizePhone(tlf) {
   return tlf.replace(/\s/g, '').replace(/^\+45/, '');
 }
 
-async 
-function toggleNavn2() {
+async function toggleNavn2() {
   const aktiv = document.getElementById('vis-navn2').checked;
   const opacity = aktiv ? '1' : '0.4';
   const cursor = aktiv ? '' : 'not-allowed';
